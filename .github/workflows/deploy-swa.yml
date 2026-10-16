@@ -29,7 +29,7 @@ jobs:
     # a dispatch from another branch would not get past the federated credential
     if: github.ref == 'refs/heads/main' && vars.AZURE_CLIENT_ID != ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Build app
