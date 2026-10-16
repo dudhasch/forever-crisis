@@ -1,0 +1,49 @@
+# Optional: upload the extractor data pack to the public `ffcx-data` container from GitHub Actions.
+# The data pack is a recipe of ids, offsets and hashes, with no text, models, textures or audio. It is built from the maintainer's local extraction and never lives in
+# this repository, so the maintainer passes a short-lived https link to the zip (built by release-tools/pack_data.py). The workflow checks it against extractor/data.lock.json on
+# main and uploads it with `az storage blob upload --auth-mode login` as id-fc-gh-main (OIDC; Storage Blob Data
+# Contributor on the data account). Nothing is kept as an artifact. The local alternative is
+# `pwsh release-tools/publish-data.ps1` with your own `az login` (docs/PUBLISHING.md).
+# Needs the Actions variables AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID and DATA_BASE_URL.
+name: publish-data
+on:
+  workflow_dispatch:
+    inputs:
+      pack_url:
+        description: https link to the ffcx-data-*.zip named in extractor/data.lock.json (use a short-lived link)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for azure/login
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # id-fc-gh-main trusts main only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the pack
+        env:
+          PACK_URL: ${{ inputs.pack_url }}
+        run: |
+          echo "::add-mask::$PACK_URL"
+          case "$PACK_URL" in https://*) ;; *) echo "::error::pack_url must be an https link"; exit 1 ;; esac
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/pack.zip" "$PACK_URL"
+      - name: Azure sign-in (OIDC, id-fc-gh-main)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload (checks the SHA-256 against extractor/data.lock.json, never overwrites)
+        shell: pwsh
+        env:
+          DATA_BASE_URL: ${{ vars.DATA_BASE_URL }}
+        run: ./release-tools/publish-data.ps1 -File "$env:RUNNER_TEMP/pack.zip"
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/pack.zip"
+          az logout || true

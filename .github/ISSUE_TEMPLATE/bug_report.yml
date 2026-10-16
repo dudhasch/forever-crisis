@@ -1,0 +1,86 @@
+# Opened from the game's "Report a bug" (start menu, game menu → Extras, pause windows), which fills in the
+# environment fields below through URL query parameters. The field ids must match src/platform/bugreport-url.ts.
+name: Bug report
+description: Something in FF7 Forever Crisis doesn't work as it should.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please don't attach game files or extracted assets, and check that screenshots or logs contain nothing personal.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      placeholder: The party froze after the second wave of the Sector 1 battle…
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. New Game → Chapter 1
+        2. Walk to …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: App version (build)
+      description: Filled in by the game. Shown on the title screen under Settings.
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - hosted folder
+        - local
+        - remote
+        - dev
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 141 / Windows
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Where in the game
+      description: Map, story content and step, or battle id and wave.
+  - type: input
+    id: manifest
+    attributes:
+      label: Asset manifest
+      description: Version of the folder the installer extracted (ffcx-manifest.json).
+  - type: textarea
+    id: errors
+    attributes:
+      label: Recent errors
+      description: The last few errors the game logged (file paths removed).
+      render: text
+  - type: textarea
+    id: save
+    attributes:
+      label: Save summary (optional)
+      description: Only present if you ticked "Include a summary of my current save".
+      render: json
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or video
+      description: Drag images here. Optional.

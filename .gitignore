@@ -1,0 +1,26 @@
+node_modules/
+.venv/
+build/
+release-out/
+.azurite/
+app/node_modules/
+app/dist/
+api/node_modules/
+api/local.settings.json
+extractor/tools/
+extractor/**/__pycache__/
+__pycache__/
+*.pyc
+public-out/
+.env
+.env.*
+*.pfx
+*.publishsettings
+local.settings.json
+.vscode/
+*.log
+# maintainer-only: the data pack's sources, tool output, local paths, screenshots
+extractor/data/
+release-tools/out/
+release-tools/paths.local.json
+docs/screenshots/

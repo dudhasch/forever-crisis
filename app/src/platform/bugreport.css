@@ -1,0 +1,39 @@
+/* Report a bug window; the frame is the pause window's (.pz, .pz-win in game/screens.css) */
+.br {
+  z-index: 60;
+}
+.br-win {
+  max-width: min(560px, 100%);
+}
+.br-pre {
+  margin: 0 6px 8px;
+  padding: 6px 8px;
+  max-height: 220px;
+  overflow: auto;
+  font: 12px/1.4 ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+.br-warn {
+  margin: 0 6px 8px;
+  font-size: 13px;
+  color: #ffd27a;
+}
+.br-check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 6px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.br-btns {
+  display: flex;
+  gap: 8px;
+}
+.br-btns .ff-opt {
+  flex: 1;
+  text-align: center;
+}

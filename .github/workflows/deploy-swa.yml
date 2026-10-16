@@ -1,0 +1,64 @@
+# Deploy the web app + managed functions to Azure Static Web Apps (free tier).
+# Signs in to Azure with OIDC as id-fc-gh-main (no stored Azure secret) and reads the SWA deployment token from the
+# Key Vault secret `swa-deployment-token`. Needs the Actions variables AZURE_CLIENT_ID, AZURE_TENANT_ID,
+# AZURE_SUBSCRIPTION_ID and AZURE_KEY_VAULT (infra/README.md). The job has no `environment:` on purpose: an
+# environment turns the OIDC subject into `repo:<repo>:environment:<name>`, and id-fc-gh-main trusts only
+# `repo:<repo>:ref:refs/heads/main`.
+# Until AZURE_CLIENT_ID is set (a fresh fork or a new repository), the job is skipped instead of failing.
+name: deploy-swa
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', 'api/**', 'swa/**', 'scripts/finish-dist.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for azure/login
+
+concurrency:
+  group: deploy-swa
+  cancel-in-progress: false
+
+env:
+  VITE_GITHUB_REPO: ${{ github.repository }} # Report a bug opens issues here
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # a dispatch from another branch would not get past the federated credential
+    if: github.ref == 'refs/heads/main' && vars.AZURE_CLIENT_ID != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build app
+        run: |
+          npm --prefix app ci
+          npm --prefix app run build
+          node scripts/finish-dist.mjs
+      - name: Azure sign-in (OIDC, id-fc-gh-main)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: SWA deployment token from Key Vault
+        id: swa
+        env:
+          VAULT: ${{ vars.AZURE_KEY_VAULT }}
+        run: |
+          token=$(az keyvault secret show --vault-name "$VAULT" --name swa-deployment-token --query value -o tsv --only-show-errors)
+          echo "::add-mask::$token"
+          if [ -z "$token" ]; then echo "::error::swa-deployment-token is empty or missing in $VAULT"; exit 1; fi
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: app/dist
+          api_location: api
+          skip_app_build: true
+      - name: Azure sign-out
+        if: always()
+        run: az logout || true

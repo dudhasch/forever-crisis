@@ -1,0 +1,25 @@
+{
+  "name": "ff7-forever-crisis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Forever Crisis, an unofficial fan project: walk the world of FINAL FANTASY VII EVER CRISIS again, rebuilt from your own Steam install.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "preview": "vite preview --port 5181"
+  },
+  "dependencies": {
+    "fengari": "^0.1.5",
+    "three": "^0.186.1",
+    "three-mesh-bvh": "^0.9.16"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/three": "^0.186.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4"
+  }
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FF7 Forever Crisis</title>
+    <meta name="description" content="Forever Crisis, an unofficial fan project: walk the world of FINAL FANTASY VII EVER CRISIS again, rebuilt from your own Steam install." />
+    <link rel="icon" href="/icons/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0a1018" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div id="ui"></div>
+    <div id="splash" class="splash hidden">
+      <div class="splash-card">
+        <h1>Forever Crisis</h1>
+        <div class="splash-sub">unofficial fan project</div>
+        <p>Walk the streets, reactors and slums of FINAL FANTASY VII EVER CRISIS, a game that is no longer online, rebuilt from your own Steam install.</p>
+        <p class="splash-keys"><kbd>WASD</kbd> walk · <kbd>Shift</kbd> run · <kbd>E</kbd> interact · <kbd>Esc</kbd> menu · <kbd>C</kbd> camera · <kbd>H</kbd> help</p>
+        <div class="splash-go">Click or press any key</div>
+      </div>
+    </div>
+    <script type="module">
+      // ?ui-kit opens the Remake-style UI kit's review page (src/ui/demo.ts) instead of the game
+      if (new URLSearchParams(location.search).has('ui-kit')) import('/src/ui/demo.ts');
+      else import('/src/main.ts');
+    </script>
+  </body>
+</html>

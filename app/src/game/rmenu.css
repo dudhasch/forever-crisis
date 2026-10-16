@@ -1,0 +1,633 @@
+/*
+ * The main menu and its screens, laid out like FF7 Remake's (src/game/menu.ts, src/game/screens). Built on the UI
+ * kit (src/ui/theme.css): sizes in --u (one 1080p pixel), the kit's colours, panels, rows and headings.
+ */
+.gmr {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: auto;
+  background: #020718;
+}
+.gmr-backdrop {
+  z-index: 0;
+}
+.gmr > .rm-frame {
+  z-index: 1;
+}
+/* the 3D canvas lies over the screens; every view draws only inside its own element's box */
+.gmr-3d {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.gmr--3d-under .gmr-3d {
+  z-index: 0;
+}
+.gmr .rm-frame__rail,
+.gmr .rm-frame__body,
+.gmr .rm-footer {
+  z-index: 1;
+}
+.gmr .rm-frame__body > * {
+  position: absolute;
+  inset: 0;
+}
+.gmr-scroll,
+.gmr-eq-side,
+.gmr-detail {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 220, 255, 0.6) rgba(2, 8, 22, 0.5);
+}
+.gmr-empty,
+.gmr-note {
+  padding: calc(14 * var(--u)) calc(20 * var(--u));
+  color: var(--rm-text-dim);
+  font-size: var(--rm-fs-small);
+  white-space: normal;
+}
+.gmr-cols-head {
+  display: flex;
+  justify-content: space-between;
+  padding: calc(6 * var(--u)) calc(30 * var(--u)) calc(4 * var(--u));
+  color: var(--rm-label);
+  font-size: var(--rm-fs-small);
+}
+.gmr-orbval {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+}
+.gmr-orbval .rm-orb {
+  font-size: calc(26 * var(--u));
+}
+.gmr-sprite {
+  width: calc(40 * var(--u));
+  height: calc(40 * var(--u));
+  object-fit: contain;
+}
+.gmr-sprite--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rm-cyan);
+  font-size: calc(30 * var(--u));
+}
+.gmr-passive {
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------------------------------------------- home */
+.gmr-home {
+  display: grid;
+  grid-template-columns: calc(560 * var(--u)) 1fr;
+  gap: calc(30 * var(--u));
+}
+.gmr-home__left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: calc(10 * var(--u));
+}
+.gmr-objective {
+  padding: calc(14 * var(--u)) calc(20 * var(--u)) calc(16 * var(--u));
+  font-size: var(--rm-fs-small);
+}
+.gmr-objective__kicker {
+  color: var(--rm-text-dim);
+  font-size: var(--rm-fs-tiny);
+  letter-spacing: 0.04em;
+}
+.gmr-objective__text {
+  font-size: calc(24 * var(--u));
+  margin: calc(2 * var(--u)) 0 calc(8 * var(--u));
+}
+.gmr-objective__where {
+  color: var(--rm-text-dim);
+}
+.gmr-objective__where .rm-icon {
+  color: var(--rm-cyan);
+}
+.gmr-lineup {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(14 * var(--u));
+  padding-right: calc(20 * var(--u));
+}
+.gmr-card {
+  position: relative;
+  width: calc(330 * var(--u));
+  cursor: pointer;
+}
+.gmr-card__view {
+  position: absolute;
+  inset: 0 0 calc(150 * var(--u)) 0;
+}
+/* a pale beam behind each portrait, like the light on the Remake's lineup */
+.gmr-card::before {
+  content: '';
+  position: absolute;
+  inset: calc(40 * var(--u)) calc(40 * var(--u)) calc(160 * var(--u));
+  background: radial-gradient(ellipse at 50% 35%, rgba(120, 200, 255, 0.22), transparent 70%);
+  pointer-events: none;
+}
+.gmr-card:hover::before {
+  background: radial-gradient(ellipse at 50% 35%, rgba(150, 225, 255, 0.36), transparent 70%);
+}
+.gmr-card__name {
+  position: absolute;
+  top: calc(10 * var(--u));
+  right: calc(4 * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  padding-left: calc(6 * var(--u));
+  border-left: calc(2 * var(--u)) solid rgba(120, 220, 255, 0.55);
+  box-shadow: -1px 0 calc(8 * var(--u)) -3px rgba(120, 220, 255, 0.8);
+}
+.gmr-card__name .rm-tag {
+  writing-mode: vertical-rl;
+  padding: calc(6 * var(--u)) 0;
+}
+.gmr-card__stats {
+  position: absolute;
+  left: calc(26 * var(--u));
+  right: calc(10 * var(--u));
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--u));
+  padding: calc(8 * var(--u)) calc(12 * var(--u)) calc(10 * var(--u)) calc(40 * var(--u));
+  background: linear-gradient(90deg, rgba(4, 16, 40, 0.15), rgba(4, 16, 40, 0.72) 30%, rgba(4, 16, 40, 0.5));
+  border-top: 1px solid rgba(120, 220, 255, 0.35);
+  /* the slanted left edge of the Remake's stat block */
+  clip-path: polygon(calc(34 * var(--u)) 0, 100% 0, 100% 100%, 0 100%);
+}
+.gmr-card__level {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: calc(10 * var(--u));
+}
+.gmr-card__level .rm-num--big {
+  font-size: calc(54 * var(--u));
+  line-height: 1;
+}
+.gmr-card__exp,
+.gmr-card__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.gmr-card__exp {
+  border-bottom: 1px solid rgba(120, 220, 255, 0.35);
+  margin-bottom: calc(4 * var(--u));
+}
+.gmr-card .rm-bar {
+  margin-bottom: calc(3 * var(--u));
+}
+
+/* ------------------------------------------------------------------------------------- materia & equipment */
+.gmr-equip {
+  display: grid;
+  grid-template-columns: calc(520 * var(--u)) 1fr calc(420 * var(--u));
+  gap: calc(24 * var(--u));
+}
+.gmr-eq-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: calc(6 * var(--u));
+}
+.gmr-eq-left .rm-list,
+.gmr-shop .rm-list,
+.gmr-inv .rm-list,
+.gmr-upgrade .rm-list,
+.gmr-bset .rm-list,
+.gmr-party .rm-list {
+  min-width: 0;
+}
+.gmr-eq-list {
+  flex: none;
+  height: calc(400 * var(--u));
+}
+.gmr-eq-left .rm-row {
+  height: calc(44 * var(--u));
+}
+.gmr-eq-left .rm-row__value {
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gmr-attrs {
+  display: flex;
+  flex-direction: column;
+  padding: 0 calc(10 * var(--u));
+}
+.gmr-attrs__top {
+  display: flex;
+  align-items: baseline;
+  gap: calc(10 * var(--u));
+  margin-bottom: calc(4 * var(--u));
+}
+.gmr-attrs__top .rm-num--big {
+  margin-right: calc(18 * var(--u));
+}
+.gmr-attrs .rm-stat {
+  height: calc(30 * var(--u));
+}
+.gmr-eq-mid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gmr-eq-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(4 * var(--u));
+  padding-top: calc(4 * var(--u));
+}
+.gmr-tag {
+  border-color: rgba(120, 220, 255, 0.6);
+  color: var(--rm-cyan);
+}
+.gmr-eq-name {
+  font-size: calc(40 * var(--u));
+  font-weight: 300;
+  line-height: 1.1;
+  text-shadow: var(--rm-text-glow), var(--rm-text-shadow);
+}
+.gmr-eq-stats {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  font-size: calc(24 * var(--u));
+}
+.gmr-eq-stats .rm-icon {
+  color: var(--rm-cyan);
+  margin-left: calc(10 * var(--u));
+}
+.gmr-eq-stats .rm-icon:first-child {
+  margin-left: 0;
+}
+.gmr-eq-orbs {
+  display: flex;
+  gap: calc(4 * var(--u));
+  font-size: calc(26 * var(--u));
+}
+.gmr-eq-desc {
+  color: var(--rm-cyan);
+  font-size: var(--rm-fs-small);
+  max-width: calc(560 * var(--u));
+  white-space: normal;
+}
+.gmr-showcase {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.gmr-showcase__flat > .rm-disc {
+  position: absolute;
+  left: 50%;
+  bottom: calc(-40 * var(--u));
+  width: calc(520 * var(--u));
+  margin-left: calc(-260 * var(--u));
+  opacity: 0.85;
+}
+.gmr-showcase__view,
+.gmr-showcase__flat {
+  position: absolute;
+  inset: 0 0 calc(60 * var(--u));
+}
+.gmr-showcase__flat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gmr-flat {
+  width: calc(260 * var(--u));
+  height: calc(260 * var(--u));
+  object-fit: contain;
+  filter: drop-shadow(0 0 calc(18 * var(--u)) rgba(120, 220, 255, 0.55));
+}
+.gmr-eq-side {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+  align-self: start;
+  max-height: 100%;
+  font-size: var(--rm-fs-small);
+}
+.gmr-eq-side .rm-heading {
+  margin-top: calc(10 * var(--u));
+}
+.gmr-eq-side .rm-heading:first-child {
+  margin-top: 0;
+}
+.gmr-side__name {
+  font-size: calc(23 * var(--u));
+}
+.gmr-side__text {
+  color: var(--rm-text-dim);
+  white-space: normal;
+}
+.gmr-side__item + .gmr-side__item {
+  margin-top: calc(6 * var(--u));
+}
+.gmr-side__kv {
+  display: grid;
+  grid-template-columns: calc(84 * var(--u)) 1fr;
+  gap: calc(8 * var(--u));
+  white-space: normal;
+}
+.gmr-eq-side .rm-stat {
+  height: calc(28 * var(--u));
+  font-size: var(--rm-fs-small);
+}
+
+/* ------------------------------------------------------------------------------------ inventory / upgrade / battle */
+.gmr-inv,
+.gmr-upgrade,
+.gmr-bset {
+  display: grid;
+  grid-template-columns: calc(700 * var(--u)) 1fr;
+  gap: calc(40 * var(--u));
+  padding: calc(6 * var(--u)) calc(16 * var(--u)) 0 calc(10 * var(--u));
+}
+.gmr-inv__left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  align-self: start;
+  max-height: 100%;
+}
+.gmr-inv__left .rm-switcher {
+  margin: calc(4 * var(--u)) 0 calc(10 * var(--u));
+}
+.gmr-detail {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+  align-self: start;
+  max-height: 100%;
+}
+.gmr-detail__head {
+  display: flex;
+  align-items: center;
+  gap: calc(16 * var(--u));
+}
+.gmr-detail__head .rm-orb {
+  font-size: calc(46 * var(--u));
+}
+.gmr-detail__icon {
+  width: calc(72 * var(--u));
+  height: calc(72 * var(--u));
+  object-fit: contain;
+  font-size: calc(54 * var(--u));
+}
+.gmr-detail__name {
+  font-size: calc(34 * var(--u));
+  font-weight: 300;
+}
+.gmr-detail__text {
+  white-space: pre-line;
+  color: var(--rm-text);
+  font-size: var(--rm-fs-small);
+}
+.gmr-vitals {
+  display: inline-grid;
+  grid-template-columns: auto calc(64 * var(--u)) calc(110 * var(--u)) auto calc(48 * var(--u)) calc(80 * var(--u));
+  align-items: center;
+  gap: calc(8 * var(--u));
+  text-align: right;
+}
+.gmr-upgrade__view {
+  height: calc(240 * var(--u));
+}
+.gmr-upgrade__lv {
+  display: flex;
+  align-items: baseline;
+  gap: calc(12 * var(--u));
+}
+.gmr-upgrade__lv .rm-icon {
+  color: var(--rm-cyan);
+}
+
+/* ----------------------------------------------------------------------------------------------------- shop */
+.gmr-shop {
+  display: grid;
+  grid-template-columns: calc(760 * var(--u)) 1fr;
+  gap: calc(40 * var(--u));
+  padding: calc(6 * var(--u)) calc(16 * var(--u)) 0 calc(10 * var(--u));
+}
+.gmr-shop__left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.gmr-shop__left > .gmr-scroll {
+  flex: 1;
+}
+.gmr-shop__mode {
+  padding: 0 calc(6 * var(--u)) calc(6 * var(--u));
+}
+.gmr-shop__verb {
+  font-size: calc(36 * var(--u));
+  font-weight: 300;
+  line-height: 1.1;
+}
+.gmr-shop__sub {
+  color: var(--rm-label);
+  font-size: var(--rm-fs-small);
+}
+.gmr-shop__cols > span:first-child {
+  flex: 1;
+}
+.gmr-shop__cols > span + span,
+.gmr-shop__vals > span {
+  width: calc(110 * var(--u));
+  text-align: right;
+}
+.gmr-shop__vals {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+.gmr-shop__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: calc(70 * var(--u));
+  margin-top: calc(8 * var(--u));
+  padding: 0 calc(30 * var(--u));
+  background: linear-gradient(90deg, rgba(40, 130, 235, 0.32), rgba(10, 40, 90, 0.4));
+  border-top: 1px solid rgba(120, 220, 255, 0.5);
+}
+.gmr-shop__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(20 * var(--u));
+}
+.gmr-shop__sum .rm-num--big {
+  font-size: calc(36 * var(--u));
+}
+.gmr-shop__right {
+  display: flex;
+  flex-direction: column;
+  gap: calc(30 * var(--u));
+  min-height: 0;
+}
+.gmr-shop__detail {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+  flex: 1;
+  min-height: 0;
+}
+.gmr-shop__view {
+  flex: 1;
+  min-height: calc(160 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gmr-shop__art {
+  width: calc(200 * var(--u));
+  height: calc(200 * var(--u));
+  object-fit: contain;
+  font-size: calc(150 * var(--u));
+  filter: drop-shadow(0 0 calc(18 * var(--u)) rgba(120, 220, 255, 0.45));
+}
+.gmr-who {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+}
+.gmr-who__row {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+}
+.gmr-who__owned {
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------------------------------------------- party */
+.gmr-party {
+  display: grid;
+  grid-template-columns: calc(620 * var(--u)) 1fr;
+  gap: calc(40 * var(--u));
+  padding: calc(6 * var(--u)) calc(16 * var(--u)) 0 calc(10 * var(--u));
+}
+.gmr-party__left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.gmr-party__names {
+  display: flex;
+  gap: calc(30 * var(--u));
+  padding: 0 calc(10 * var(--u)) calc(10 * var(--u));
+}
+.gmr-party__val {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+}
+.gmr-party__side {
+  position: relative;
+}
+.gmr-party__view {
+  position: absolute;
+  inset: 0 calc(380 * var(--u)) 0 0;
+}
+.gmr-party__info {
+  position: absolute;
+  right: 0;
+  bottom: calc(20 * var(--u));
+  width: calc(400 * var(--u));
+  padding: calc(14 * var(--u)) calc(20 * var(--u));
+}
+.gmr-party__name {
+  font-size: calc(36 * var(--u));
+  font-weight: 300;
+  margin-bottom: calc(6 * var(--u));
+}
+.gmr-party__name small {
+  font-size: 0.6em;
+  color: var(--rm-text-dim);
+}
+
+/* --------------------------------------------------------------------------------------------- save / load */
+.gmr-save__panel {
+  padding: calc(6 * var(--u)) calc(60 * var(--u)) 0 calc(10 * var(--u));
+}
+.gmr-save .rm-row {
+  height: calc(104 * var(--u));
+}
+.gmr-save .rm-row__label {
+  flex: none;
+  width: calc(160 * var(--u));
+  font-size: calc(30 * var(--u));
+  font-weight: 300;
+}
+.gmr-save .rm-row__value {
+  flex: 1;
+}
+.gmr-save__sum {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+}
+.gmr-save__where {
+  color: var(--rm-text);
+}
+.gmr-save__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  font-size: var(--rm-fs-small);
+}
+.gmr-save__meta .rm-icon {
+  color: var(--rm-cyan);
+  margin-left: calc(10 * var(--u));
+}
+.gmr-save__meta .rm-icon:first-child {
+  margin-left: 0;
+}
+
+/* ------------------------------------------------------------------------------------------ system / manual */
+.gmr-system > .rm-list {
+  width: calc(720 * var(--u));
+}
+.gmr-system .rm-key {
+  font-size: calc(26 * var(--u));
+}
+.gmr .rm-frame__body > .gmr-manual {
+  right: auto;
+  bottom: auto;
+  width: calc(1000 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+}
+.gmr-manual__row {
+  display: grid;
+  grid-template-columns: calc(200 * var(--u)) 1fr;
+  align-items: center;
+  min-height: calc(48 * var(--u));
+  border-bottom: 1px solid rgba(120, 220, 255, 0.15);
+}
+.gmr-manual__glyph {
+  justify-self: end;
+  padding-right: calc(30 * var(--u));
+  font-size: calc(28 * var(--u));
+}

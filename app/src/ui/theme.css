@@ -1,0 +1,998 @@
+/*
+ * Remake-style UI kit: tokens and reusable classes. Art lives in /ui (built in GIMP by brand/gimp/ui/build_ui.py);
+ * behaviour (glyphs, transitions, specks, sounds) in src/ui/kit.ts. Everything is scoped to .rm-* classes.
+ *
+ * Sizes use --u, one "design pixel" of a 1920x1080 screen: calc(N * var(--u)) is N px at 1080p and scales with
+ * the window, so a whole screen keeps its Remake proportions at any resolution.
+ *
+ * Motion: kit.ts sets <html data-rm-motion="reduced|full"> from the Reduced motion setting and the OS
+ * preference; with "reduced", every .rm animation is cut to a plain fade.
+ */
+
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('/fonts/TitilliumWeb-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('/fonts/TitilliumWeb-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('/fonts/TitilliumWeb-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('/fonts/TitilliumWeb-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  /* one 1080p design pixel */
+  --u: min(calc(100vh / 1080), calc(100vw / 1920));
+
+  --rm-font: 'Titillium Web', 'Segoe UI', system-ui, sans-serif;
+  --rm-fs: calc(25 * var(--u)); /* list / body text */
+  --rm-fs-small: calc(19 * var(--u));
+  --rm-fs-tiny: calc(13 * var(--u));
+  --rm-fs-title: calc(46 * var(--u)); /* the vertical rail title */
+  --rm-fs-num: calc(34 * var(--u));
+
+  /* colour */
+  --rm-text: #eaf4ff;
+  --rm-text-dim: #93b6d8;
+  --rm-text-off: #5b7593;
+  --rm-label: #5fc0ff; /* small blue labels: HP, MP, Level, EXP */
+  --rm-cyan: #78dcff;
+  --rm-cyan-hi: #cdf5ff;
+  --rm-blue: #2882eb;
+  --rm-blue-deep: #0e306e;
+  --rm-navy: #051028;
+  --rm-ink: #02071a;
+  --rm-up: #6fe39a;
+  --rm-down: #ff6b6b;
+  --rm-warn: #ffcf5a;
+  --rm-enemy: #d02b3a;
+  --rm-hp: linear-gradient(90deg, #5bd7a2, #b8f5d6);
+  --rm-hp-low: linear-gradient(90deg, #d8a23a, #ffd76a);
+  --rm-hp-crit: linear-gradient(90deg, #c92d35, #ff7a6e);
+  --rm-mp: linear-gradient(90deg, #3a8de8, #9ad2ff);
+  --rm-atb: linear-gradient(90deg, #1f78d8, #6fd0ff);
+  --rm-limit: linear-gradient(90deg, #d07a1c, #ffd35a);
+
+  /* glow */
+  --rm-glow: 0 0 calc(6 * var(--u)) rgba(120, 220, 255, 0.65);
+  --rm-glow-strong: 0 0 calc(4 * var(--u)) rgba(205, 245, 255, 0.9), 0 0 calc(14 * var(--u)) rgba(120, 220, 255, 0.6);
+  --rm-text-glow: 0 0 calc(8 * var(--u)) rgba(120, 200, 255, 0.45);
+  --rm-text-shadow: 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 6, 20, 0.9);
+
+  /* spacing */
+  --rm-gap-1: calc(4 * var(--u));
+  --rm-gap-2: calc(8 * var(--u));
+  --rm-gap-3: calc(16 * var(--u));
+  --rm-gap-4: calc(32 * var(--u));
+  --rm-row-h: calc(51 * var(--u));
+
+  /* motion */
+  --rm-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --rm-ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --rm-dur: 280ms;
+  --rm-dur-fast: 140ms;
+}
+
+/* ---------------------------------------------------------------------------------------------------------- base */
+.rm {
+  font-family: var(--rm-font);
+  font-size: var(--rm-fs);
+  font-weight: 400;
+  color: var(--rm-text);
+  text-shadow: var(--rm-text-shadow);
+  line-height: 1.25;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+.rm *,
+.rm *::before,
+.rm *::after {
+  box-sizing: border-box;
+}
+.rm[hidden],
+.rm [hidden] {
+  display: none !important;
+}
+.rm-label {
+  color: var(--rm-label);
+  font-size: var(--rm-fs-small);
+}
+.rm-dim {
+  color: var(--rm-text-dim);
+}
+.rm-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+.rm-num--big {
+  font-size: var(--rm-fs-num);
+  font-weight: 300;
+}
+/* "9099/9640": the max part is smaller and dimmer */
+.rm-num small,
+.rm-max {
+  font-size: 0.68em;
+  color: var(--rm-text-dim);
+}
+.rm-delta--up {
+  color: var(--rm-up);
+}
+.rm-delta--down {
+  color: var(--rm-down);
+}
+
+/* ------------------------------------------------------------------------------------------------------ backdrops */
+.rm-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #020718 url('/ui/nebula.webp') center / cover no-repeat;
+}
+/* options / pause: the live scene shows through, blurred and tinted blue */
+.rm-backdrop--scene {
+  background: linear-gradient(115deg, rgba(10, 60, 150, 0.55), rgba(2, 10, 30, 0.72) 60%);
+  backdrop-filter: blur(calc(10 * var(--u))) saturate(0.8);
+}
+.rm-backdrop > .rm-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rm-grid {
+  background: url('/ui/grid.png') 0 0 / calc(64 * var(--u)) repeat;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse at 85% 85%, #000 0, transparent 45%), radial-gradient(ellipse at 8% 90%, #000 0, transparent 30%);
+}
+.rm-hex {
+  background: url('/ui/hex.png') 0 0 / calc(48 * var(--u)) calc(83 * var(--u)) repeat;
+  opacity: 0.5;
+}
+.rm-vignette {
+  background: url('/ui/vignette.png') center / 100% 100% no-repeat;
+}
+/* the tileable speck layer, drifting slowly up and to the left (the canvas Specks add the nearer ones) */
+.rm-specks-tile {
+  background: url('/ui/specks.png') 0 0 / calc(512 * var(--u)) repeat;
+  opacity: 0.55;
+  animation: rm-drift 90s linear infinite;
+}
+@keyframes rm-drift {
+  to {
+    background-position: calc(-512 * var(--u)) calc(-512 * var(--u));
+  }
+}
+canvas.rm-specks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------------------------- panels (9-slice) */
+/* The art is drawn on a ::before that reaches outside the box by the glow margin, so padding stays free. */
+.rm-panel,
+.rm-dropdown,
+.rm-frame {
+  position: relative;
+  isolation: isolate;
+}
+.rm-panel::before,
+.rm-dropdown::before,
+.rm-frame::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-style: solid;
+}
+.rm-panel {
+  padding: calc(18 * var(--u)) calc(22 * var(--u));
+}
+.rm-panel::before {
+  inset: calc(-10 * var(--u));
+  border-width: calc(24 * var(--u));
+  border-image: url('/ui/panel.png') 48 fill / calc(24 * var(--u)) stretch;
+}
+.rm-panel--plain::before {
+  border-image-source: url('/ui/panel-plain.png');
+}
+/* a borderless dark plate (stat blocks, the HUD party list) */
+.rm-plate {
+  background: linear-gradient(90deg, rgba(4, 16, 40, 0.82), rgba(4, 16, 40, 0.45));
+  border-top: 1px solid rgba(120, 220, 255, 0.35);
+}
+
+.rm-dropdown {
+  padding: calc(6 * var(--u)) calc(6 * var(--u));
+  min-width: calc(320 * var(--u));
+}
+.rm-dropdown::before {
+  inset: calc(-10 * var(--u));
+  border-width: calc(26 * var(--u));
+  border-image: url('/ui/dropdown.png') 52 fill / calc(26 * var(--u)) stretch;
+}
+
+/* ------------------------------------------------------------------------------------- the full-screen menu frame */
+/* <div class="rm-frame"><div class="rm-frame__rail"><span class="rm-frame__title">Main Menu</span></div>
+ *   <div class="rm-frame__body">…</div><footer class="rm-footer">…</footer></div> */
+.rm-frame {
+  position: absolute;
+  inset: 0;
+}
+.rm-frame::before {
+  inset: 0;
+  border-width: calc(80 * var(--u)) calc(104 * var(--u)) calc(112 * var(--u)) calc(168 * var(--u));
+  border-image: url('/ui/frame.png') 160 208 224 336 fill / calc(80 * var(--u)) calc(104 * var(--u)) calc(112 * var(--u))
+    calc(168 * var(--u)) stretch;
+}
+.rm-frame__rail {
+  position: absolute;
+  left: calc(82 * var(--u));
+  top: calc(56 * var(--u));
+  width: calc(62 * var(--u));
+  bottom: calc(96 * var(--u));
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+.rm-frame__title {
+  writing-mode: vertical-rl;
+  font-size: var(--rm-fs-title);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--rm-text);
+  text-shadow: var(--rm-text-glow);
+  white-space: nowrap;
+  padding-top: calc(14 * var(--u));
+}
+/* the inner panel minus the strip at its bottom where the footer's help line sits */
+.rm-frame__body {
+  position: absolute;
+  left: calc(146 * var(--u));
+  top: calc(66 * var(--u));
+  right: calc(80 * var(--u));
+  bottom: calc(130 * var(--u));
+}
+
+/* ------------------------------------------------------------------------------------------------- lists & rows */
+.rm-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: calc(560 * var(--u));
+}
+/* a short glowing accent down the left edge of a list, like the menu's left bracket */
+.rm-list--accent {
+  border-left: calc(2 * var(--u)) solid rgba(120, 220, 255, 0.55);
+  box-shadow: -1px 0 calc(6 * var(--u)) -2px rgba(120, 220, 255, 0.6);
+}
+.rm-row {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: var(--rm-gap-2);
+  height: var(--rm-row-h);
+  padding: 0 calc(30 * var(--u));
+  color: var(--rm-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rm-row::before,
+.rm-row::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-style: solid;
+}
+/* base band */
+.rm-row::before {
+  inset: 0;
+  border-width: calc(2 * var(--u)) calc(12 * var(--u));
+  border-image: url('/ui/row.png') 4 24 fill / calc(2 * var(--u)) calc(12 * var(--u)) stretch;
+}
+/* divider under each row */
+.rm-row::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(2 * var(--u));
+  border: 0;
+  background: url('/ui/divider.png') 0 0 / 100% 100% no-repeat;
+}
+.rm-row:hover,
+.rm-row.is-hover {
+  --rm-row-art: url('/ui/hover.png');
+}
+.rm-row.is-selected {
+  --rm-row-art: url('/ui/select.png');
+  color: #fff;
+}
+.rm-row:hover::before,
+.rm-row.is-hover::before,
+.rm-row.is-selected::before {
+  border-width: calc(4 * var(--u)) calc(12 * var(--u));
+  border-image: var(--rm-row-art) 8 24 fill / calc(4 * var(--u)) calc(12 * var(--u)) stretch;
+}
+.rm-row.is-selected {
+  text-shadow: var(--rm-text-glow), var(--rm-text-shadow);
+}
+.rm-row.is-disabled {
+  color: var(--rm-text-off);
+  cursor: default;
+}
+.rm-row.is-disabled:hover::before {
+  border-image: url('/ui/row.png') 4 24 fill / calc(2 * var(--u)) calc(12 * var(--u)) stretch;
+}
+.rm-row__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rm-row__value {
+  color: var(--rm-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.rm-row.is-selected .rm-row__value {
+  color: var(--rm-text);
+}
+/* the highlight sweep kit.sweep() runs when a row is picked */
+.rm-row .rm-sweep {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(205, 245, 255, 0.55) 45%, transparent 60%) no-repeat;
+  background-size: 45% 100%;
+  animation: rm-sweep 420ms var(--rm-ease) forwards;
+}
+@keyframes rm-sweep {
+  from {
+    background-position: -60% 0;
+  }
+  to {
+    background-position: 160% 0;
+  }
+}
+.rm-divider {
+  height: calc(2 * var(--u));
+  background: url('/ui/divider.png') 0 0 / 100% 100% no-repeat;
+  border: 0;
+  margin: var(--rm-gap-2) 0;
+}
+
+/* Options-style row: label right-aligned on the left, a diamond on the divider, value on the right */
+.rm-option {
+  display: grid;
+  grid-template-columns: 1fr calc(16 * var(--u)) 1fr;
+  align-items: center;
+  padding: 0;
+}
+.rm-option > .rm-option__label {
+  text-align: right;
+  color: var(--rm-label);
+  padding-right: calc(24 * var(--u));
+}
+.rm-option.is-selected > .rm-option__label {
+  color: var(--rm-cyan-hi);
+}
+.rm-option > .rm-option__node {
+  justify-self: center;
+  width: calc(8 * var(--u));
+  height: calc(8 * var(--u));
+  transform: rotate(45deg);
+  border: 1px solid rgba(120, 220, 255, 0.7);
+  box-shadow: var(--rm-glow);
+}
+.rm-option > .rm-option__value {
+  padding-left: calc(24 * var(--u));
+}
+
+/* --------------------------------------------------------------------------------------------- icons & glyphs */
+/* atlas positions come from kit.ts (--ix / --iy cell, --cols / --rows grid) */
+.rm-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  background: currentColor;
+  -webkit-mask: url('/ui/icons.png') no-repeat;
+  mask: url('/ui/icons.png') no-repeat;
+  -webkit-mask-size: calc(var(--cols) * 1em) calc(var(--rows) * 1em);
+  mask-size: calc(var(--cols) * 1em) calc(var(--rows) * 1em);
+  -webkit-mask-position: calc(var(--ix) * -1em) calc(var(--iy) * -1em);
+  mask-position: calc(var(--ix) * -1em) calc(var(--iy) * -1em);
+}
+.rm-icon--cyan {
+  color: var(--rm-cyan);
+  filter: drop-shadow(0 0 calc(3 * var(--u)) rgba(120, 220, 255, 0.6));
+}
+.rm-glyph,
+.rm-orb {
+  display: inline-block;
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+  vertical-align: -0.3em;
+  background: no-repeat;
+  background-size: calc(var(--cols) * 100%) calc(var(--rows) * 100%);
+  background-position: calc(var(--ix) * 100% / max(1, var(--cols) - 1)) calc(var(--iy) * 100% / max(1, var(--rows) - 1));
+}
+.rm-glyph {
+  background-image: url('/ui/glyphs.png');
+  filter: drop-shadow(0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.6));
+}
+.rm-orb {
+  background-image: url('/ui/materia.png');
+  width: 1.1em;
+  height: 1.1em;
+}
+.rm-orb--empty {
+  background: none;
+  border-radius: 50%;
+  border: 1px solid rgba(120, 220, 255, 0.5);
+  transform: scale(0.62);
+}
+/* keyboard key: the GIMP keycap 9-slice with the key's name in CSS */
+.rm-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 1.3em;
+  height: 1.3em;
+  padding: 0 0.32em;
+  vertical-align: -0.3em;
+  border-style: solid;
+  border-width: 0.36em;
+  border-image: url('/ui/keycap.png') 28 fill / 0.36em stretch;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1;
+  color: #f2f7ff;
+  text-shadow: none;
+}
+.rm-key > span {
+  margin: -0.36em -0.2em; /* the text sits over the cap's border slices */
+  font-size: 0.62em;
+  white-space: nowrap;
+}
+.rm-glyphs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+}
+
+/* button hints: [glyph] label  [glyph] label */
+.rm-hints {
+  display: flex;
+  align-items: center;
+  gap: calc(28 * var(--u));
+  font-size: var(--rm-fs-small);
+}
+.rm-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------------------------------- footer */
+/* play time + gil left, help text centre, button hints right, tiny rights line under the hints */
+.rm-footer {
+  position: absolute;
+  left: calc(84 * var(--u));
+  right: calc(80 * var(--u));
+  bottom: calc(36 * var(--u));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  font-size: var(--rm-fs-small);
+}
+.rm-footer__left {
+  display: flex;
+  gap: calc(48 * var(--u));
+}
+.rm-footer__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6 * var(--u));
+  font-variant-numeric: tabular-nums;
+}
+.rm-footer__stat .rm-icon {
+  color: var(--rm-cyan);
+}
+.rm-footer__help {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(50 * var(--u));
+  text-align: center;
+  font-size: var(--rm-fs-small);
+}
+.rm-footer__hints {
+  justify-self: end;
+}
+.rm-footer__rights {
+  position: absolute;
+  right: 0;
+  bottom: calc(-26 * var(--u));
+  font-size: var(--rm-fs-tiny);
+  color: var(--rm-text-dim);
+  text-align: right;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------------------------------------------------ battle HUD pieces */
+/* ability name banner: blue for the party, red for enemies */
+.rm-banner {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  min-width: calc(260 * var(--u));
+  padding: calc(4 * var(--u)) calc(70 * var(--u));
+  text-align: center;
+  font-size: calc(24 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.rm-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-style: solid;
+  border-width: calc(6 * var(--u)) calc(70 * var(--u));
+  border-image: url('/ui/banner-party.png') 12 140 fill / calc(6 * var(--u)) calc(70 * var(--u)) stretch;
+}
+.rm-banner--enemy::before {
+  border-image-source: url('/ui/banner-enemy.png');
+}
+
+/* notification feed: newest at the bottom, each line slides in and fades out */
+.rm-notify-feed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(6 * var(--u));
+}
+.rm-notify {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  min-width: calc(330 * var(--u));
+  height: calc(34 * var(--u));
+  padding: 0 calc(40 * var(--u)) 0 0;
+  font-size: calc(22 * var(--u));
+}
+.rm-notify::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-style: solid;
+  border-width: calc(2 * var(--u)) calc(60 * var(--u)) calc(2 * var(--u)) calc(32 * var(--u));
+  border-image: url('/ui/notify.png') 4 120 4 64 fill / calc(2 * var(--u)) calc(60 * var(--u)) calc(2 * var(--u)) calc(32 * var(--u))
+    stretch;
+}
+.rm-notify > .rm-icon {
+  width: calc(30 * var(--u));
+  height: calc(22 * var(--u));
+  font-size: calc(22 * var(--u));
+  margin: 0 calc(4 * var(--u));
+  background-color: #fff;
+}
+.rm-notify--hi {
+  color: #fff;
+  text-shadow: var(--rm-text-glow);
+}
+
+/* gauges: <div class="rm-bar rm-bar--hp" style="--v: 0.62"><i></i></div> */
+.rm-bar {
+  --v: 1;
+  position: relative;
+  height: calc(7 * var(--u));
+  background: rgba(2, 8, 22, 0.85);
+  border: 1px solid rgba(120, 200, 255, 0.28);
+  overflow: hidden;
+}
+.rm-bar > i {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--v));
+  background: var(--rm-hp);
+  transition: transform var(--rm-dur) var(--rm-ease);
+}
+/* the "damage taken" ghost that trails behind the HP fill */
+.rm-bar > b {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--ghost, var(--v)));
+  background: rgba(255, 255, 255, 0.55);
+  transition: transform 700ms 250ms var(--rm-ease);
+}
+.rm-bar--hp.is-low > i {
+  background: var(--rm-hp-low);
+}
+.rm-bar--hp.is-critical > i {
+  background: var(--rm-hp-crit);
+}
+.rm-bar--mp > i {
+  background: var(--rm-mp);
+}
+.rm-bar--atb {
+  height: calc(9 * var(--u));
+}
+.rm-bar--atb > i {
+  background: var(--rm-atb);
+  transition: none;
+}
+.rm-bar--atb.is-full > i {
+  background: linear-gradient(90deg, #6fd0ff, #e9fbff, #6fd0ff);
+  background-size: 200% 100%;
+  animation: rm-shimmer 1.2s linear infinite;
+}
+.rm-bar--atb.is-full {
+  box-shadow: var(--rm-glow);
+}
+.rm-bar--limit > i {
+  background: var(--rm-limit);
+}
+.rm-bar--limit.is-full > i {
+  background: linear-gradient(90deg, #ffb341, #fff2b0, #ffb341);
+  background-size: 200% 100%;
+  animation: rm-shimmer 0.9s linear infinite;
+}
+.rm-bar--enemy > i {
+  background: linear-gradient(90deg, #d8a23a, #fff0a8);
+}
+@keyframes rm-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- misc pieces */
+/* a character name running vertically (party portraits) */
+.rm-vname {
+  writing-mode: vertical-rl;
+  font-size: calc(52 * var(--u));
+  font-weight: 300;
+  line-height: 1;
+  text-shadow: var(--rm-text-glow), var(--rm-text-shadow);
+}
+.rm-vname small {
+  font-size: 0.55em;
+  margin-top: 0.4em;
+}
+.rm-tag {
+  display: inline-block;
+  padding: 0 calc(6 * var(--u));
+  font-size: var(--rm-fs-tiny);
+  border: 1px solid rgba(255, 210, 90, 0.75);
+  color: #ffd25a;
+}
+/* stat line: [icon] Attack ........ 355  +12 */
+.rm-stat {
+  display: grid;
+  grid-template-columns: calc(26 * var(--u)) 1fr auto calc(60 * var(--u));
+  align-items: center;
+  gap: calc(8 * var(--u));
+  height: calc(34 * var(--u));
+  font-size: calc(22 * var(--u));
+}
+.rm-stat > .rm-icon {
+  color: var(--rm-cyan);
+  font-size: calc(22 * var(--u));
+}
+.rm-stat > .rm-stat__label {
+  color: var(--rm-label);
+}
+.rm-stat > .rm-stat__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.rm-stat > .rm-stat__delta {
+  text-align: right;
+  font-size: 0.85em;
+}
+/* quantity picker: [-] 03 [+] */
+.rm-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(14 * var(--u));
+  font-variant-numeric: tabular-nums;
+}
+.rm-qty__n {
+  min-width: 2.4em;
+  text-align: center;
+  font-size: var(--rm-fs-num);
+  font-weight: 300;
+}
+.rm-qty .rm-icon {
+  color: var(--rm-cyan);
+}
+/* the equipment disc under a turning 3D weapon (CSS tilt; the 3D canvas sits above it) */
+.rm-disc {
+  aspect-ratio: 1;
+  background: url('/ui/disc.png') center / contain no-repeat;
+  transform: perspective(calc(900 * var(--u))) rotateX(62deg);
+  animation: rm-spin 40s linear infinite;
+}
+@keyframes rm-spin {
+  to {
+    transform: perspective(calc(900 * var(--u))) rotateX(62deg) rotate(360deg);
+  }
+}
+.rm-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 220, 255, 0.6) rgba(2, 8, 22, 0.5);
+}
+
+/* ------------------------------------------------------------------------------------- menu screen pieces */
+/* small section heading with a glowing underline ("Weapon", "Attributes", "Ability") */
+.rm-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--rm-gap-2);
+  color: var(--rm-label);
+  font-size: var(--rm-fs-small);
+  padding: 0 calc(6 * var(--u)) calc(2 * var(--u));
+  border-bottom: 1px solid rgba(120, 220, 255, 0.5);
+  box-shadow: 0 calc(3 * var(--u)) calc(6 * var(--u)) calc(-4 * var(--u)) rgba(120, 220, 255, 0.55);
+  margin-bottom: var(--rm-gap-2);
+}
+.rm-heading > .rm-heading__aside {
+  margin-left: auto;
+  color: var(--rm-text-dim);
+}
+/* category strip: [L1] ‹ Items  Weapons  Materia › [R1] */
+.rm-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6 * var(--u));
+  font-size: var(--rm-fs-small);
+  padding: calc(4 * var(--u)) 0;
+  border-bottom: 1px solid rgba(120, 220, 255, 0.25);
+}
+.rm-tabs > .rm-glyphs {
+  font-size: calc(22 * var(--u));
+}
+.rm-tabs .rm-icon {
+  color: var(--rm-cyan);
+}
+.rm-tab {
+  position: relative;
+  padding: calc(2 * var(--u)) calc(14 * var(--u));
+  color: var(--rm-text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rm-tab:hover {
+  color: var(--rm-text);
+}
+.rm-tab.is-selected {
+  color: #fff;
+  text-shadow: var(--rm-text-glow), var(--rm-text-shadow);
+}
+.rm-tab.is-selected::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: calc(-5 * var(--u));
+  height: calc(2 * var(--u));
+  background: var(--rm-cyan);
+  box-shadow: var(--rm-glow);
+}
+/* character switcher: [L1] ‹ Cloud › [R1] */
+.rm-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(12 * var(--u));
+}
+.rm-switcher > .rm-glyphs {
+  font-size: calc(22 * var(--u));
+}
+.rm-switcher > .rm-icon {
+  color: var(--rm-cyan);
+  cursor: pointer;
+}
+.rm-switcher__name {
+  min-width: calc(180 * var(--u));
+  text-align: center;
+  font-size: calc(28 * var(--u));
+}
+/* who-can-equip marks: ✓ can equip / equipped, ↑ an improvement, – cannot */
+.rm-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+  font-size: calc(20 * var(--u));
+}
+.rm-mark--check {
+  color: var(--rm-cyan);
+}
+.rm-mark--up {
+  color: var(--rm-up);
+}
+.rm-mark--down {
+  color: var(--rm-down);
+}
+.rm-mark--none {
+  color: var(--rm-text-off);
+}
+/* option slider: a row of ticks filled up to the value */
+.rm-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(14 * var(--u));
+}
+.rm-slider__track {
+  position: relative;
+  width: calc(260 * var(--u));
+  height: calc(8 * var(--u));
+  background: repeating-linear-gradient(90deg, rgba(120, 200, 255, 0.28) 0 calc(2 * var(--u)), transparent calc(2 * var(--u)) calc(13 * var(--u)));
+  border-bottom: 1px solid rgba(120, 200, 255, 0.35);
+  cursor: pointer;
+}
+.rm-slider__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--v, 0) * 100%);
+  background: var(--rm-mp);
+  box-shadow: var(--rm-glow);
+}
+.rm-slider__text {
+  min-width: calc(110 * var(--u));
+  font-variant-numeric: tabular-nums;
+}
+/* a confirmation popup over a menu screen */
+.rm-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1, 6, 20, 0.55);
+}
+.rm-confirm > .rm-panel {
+  min-width: calc(620 * var(--u));
+  max-width: calc(900 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: var(--rm-gap-3);
+  padding: calc(28 * var(--u)) calc(34 * var(--u));
+}
+.rm-confirm__text {
+  text-align: center;
+  white-space: pre-line;
+}
+.rm-confirm .rm-list {
+  min-width: 0;
+}
+.rm-confirm .rm-row {
+  justify-content: center;
+}
+.rm-confirm .rm-row__label {
+  flex: none;
+}
+
+/* ------------------------------------------------------------------------------------------------- transitions */
+/* kit.enter(el, kind) / kit.exit(el, kind) add these; they also work as plain classes */
+.rm-in-left {
+  animation: rm-in-left var(--rm-dur) var(--rm-ease) both;
+}
+.rm-in-right {
+  animation: rm-in-right var(--rm-dur) var(--rm-ease) both;
+}
+.rm-in-up {
+  animation: rm-in-up var(--rm-dur) var(--rm-ease) both;
+}
+.rm-in-fade {
+  animation: rm-fade var(--rm-dur) var(--rm-ease) both;
+}
+.rm-in-zoom {
+  animation: rm-in-zoom var(--rm-dur) var(--rm-ease) both;
+}
+.rm-out-left {
+  animation: rm-in-left var(--rm-dur-fast) var(--rm-ease-in) reverse both;
+}
+.rm-out-right {
+  animation: rm-in-right var(--rm-dur-fast) var(--rm-ease-in) reverse both;
+}
+.rm-out-up {
+  animation: rm-in-up var(--rm-dur-fast) var(--rm-ease-in) reverse both;
+}
+.rm-out-fade {
+  animation: rm-fade var(--rm-dur-fast) var(--rm-ease-in) reverse both;
+}
+.rm-out-zoom {
+  animation: rm-in-zoom var(--rm-dur-fast) var(--rm-ease-in) reverse both;
+}
+@keyframes rm-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-40 * var(--u)));
+  }
+}
+@keyframes rm-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(calc(40 * var(--u)));
+  }
+}
+@keyframes rm-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(calc(24 * var(--u)));
+  }
+}
+@keyframes rm-in-zoom {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes rm-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: no movement, no drift, no shimmer; just short fades */
+html[data-rm-motion='reduced'] .rm-in-left,
+html[data-rm-motion='reduced'] .rm-in-right,
+html[data-rm-motion='reduced'] .rm-in-up,
+html[data-rm-motion='reduced'] .rm-in-zoom {
+  animation-name: rm-fade;
+}
+html[data-rm-motion='reduced'] .rm-out-left,
+html[data-rm-motion='reduced'] .rm-out-right,
+html[data-rm-motion='reduced'] .rm-out-up,
+html[data-rm-motion='reduced'] .rm-out-zoom {
+  animation-name: rm-fade;
+}
+html[data-rm-motion='reduced'] .rm-specks-tile,
+html[data-rm-motion='reduced'] .rm-disc,
+html[data-rm-motion='reduced'] .rm-bar--atb.is-full > i,
+html[data-rm-motion='reduced'] .rm-bar--limit.is-full > i {
+  animation: none;
+}
+html[data-rm-motion='reduced'] .rm-row .rm-sweep {
+  display: none;
+}
+html[data-rm-motion='reduced'] .rm-bar > i,
+html[data-rm-motion='reduced'] .rm-bar > b {
+  transition: none;
+}

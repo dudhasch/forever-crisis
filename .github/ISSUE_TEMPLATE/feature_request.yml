@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest an improvement to the game, the installer or the site.
+title: "[Idea] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like?
+      description: Describe the problem or the idea.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it help?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Game (field, story, battles, menus)
+        - Installer / extractor
+        - Website, cloud saves, updates
+        - Other

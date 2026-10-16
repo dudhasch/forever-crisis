@@ -1,0 +1,66 @@
+# Tag vX.Y.Z -> build the extractor exe, the web app and the installer files, create a GitHub Release.
+# The extractor's data pack is a recipe of ids, offsets and hashes, with no text, models, textures or audio. It is not in this repository or the release:
+# a maintainer builds it from their local extraction (release-tools/pack_data.py), uploads the zip to the data
+# container (publish-data.ps1) and commits extractor/data.lock.json; this workflow only checks that the pinned pack
+# is reachable and unchanged.
+# Run it by hand to rebuild the release of an existing tag (Actions -> release -> Run workflow, tag vX.Y.Z).
+name: release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: existing tag to build the release for (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  VITE_GITHUB_REPO: ${{ github.repository }} # Report a bug opens issues here
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check the tag
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          TAG: ${{ inputs.tag }}
+        run: if ($env:TAG -notmatch '^v\d+\.\d+\.\d+') { throw "tag must look like vX.Y.Z, got '$env:TAG'" }
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Python deps
+        run: pip install -r extractor/requirements.txt pyinstaller==6.22.3
+      - name: Decoders (vgmstream r2117, FFmpeg essentials)
+        shell: pwsh
+        run: ./scripts/fetch-tools.ps1
+      - name: 'Extractor exe (no bundled data: the installer fetches the pinned pack)'
+        env:
+          FFCX_NO_BUNDLED_DATA: '1'
+        working-directory: extractor
+        run: pyinstaller ffcx.spec --noconfirm --distpath ../build/dist --workpath ../build/work
+      - name: Smoke test
+        run: build\dist\ffcx\ffcx.exe version
+      - name: Web app
+        run: |
+          npm --prefix app ci
+          npm --prefix app run build
+          node scripts/finish-dist.mjs
+      - name: Stage release files
+        shell: pwsh
+        run: ./scripts/stage-release.ps1 -Out release-out -Site "${{ vars.SITE_URL }}" -DataBase "${{ vars.DATA_BASE_URL }}" -VerifyData
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: release-out/*
+          generate_release_notes: true

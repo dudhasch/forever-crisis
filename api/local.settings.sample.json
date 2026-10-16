@@ -1,0 +1,9 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "",
+    "STORAGE_CONNECTION": "UseDevelopmentStorage=true",
+    "TELEMETRY_ENABLED": "1"
+  }
+}

@@ -1,0 +1,92 @@
+# Build and test on every push / PR. Nothing is published.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  VITE_GITHUB_REPO: ${{ github.repository }} # Report a bug opens issues here
+
+jobs:
+  scan:
+    name: secrets, personal data, game content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/scan.mjs
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: az bicep install
+      - run: az bicep build -f infra/main.bicep --stdout > /dev/null
+      - run: az bicep lint -f infra/main.bicep
+      - run: az bicep build-params -f infra/main.bicepparam --stdout > /dev/null
+
+  templates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --ignore-scripts
+      - run: node --test tests/unit/*.test.mjs
+
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm --prefix app ci
+      - name: Lint and typecheck (strict tsc)
+        run: npm --prefix app run typecheck
+      - name: Unit tests
+        run: npm --prefix app test
+      - run: npm --prefix app run build
+      - run: node scripts/finish-dist.mjs
+      - name: E2E - app starts under the SWA headers (CSP)
+        run: |
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+          node tests/e2e/headers-csp.mjs
+      - uses: actions/upload-artifact@v4
+        with: { name: app-dist, path: app/dist }
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm --prefix api ci
+      - name: Lint (syntax check)
+        run: find api/src -name '*.js' -exec node --check {} \;
+      - run: npm --prefix api test
+
+  extractor:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - run: pip install -r extractor/requirements.txt
+      - name: Unit tests (no game files needed)
+        run: python -m unittest discover -s extractor/tests -v
+      - name: Installer parses in Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD\installer\install.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | Format-List; exit 1 }

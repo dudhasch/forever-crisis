@@ -1,0 +1,93 @@
+# Pull request previews on Azure Static Web Apps (a staging environment per PR, closed with the PR).
+# Signs in with OIDC as id-fc-gh-pr (Reader on the resource group, Key Vault Secrets User) and reads the SWA
+# deployment token from Key Vault. Needs the Actions variables AZURE_CLIENT_ID_PR, AZURE_TENANT_ID,
+# AZURE_SUBSCRIPTION_ID and AZURE_KEY_VAULT (infra/README.md).
+# Pull requests from forks are skipped: GitHub gives them no OIDC token (and no access to variables that matter).
+# Until AZURE_CLIENT_ID_PR is set, both jobs are skipped instead of failing.
+name: preview-swa
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths: ['app/**', 'api/**', 'swa/**']
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for azure/login
+  pull-requests: write # the SWA action comments the preview URL on the PR
+
+concurrency:
+  group: preview-swa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  VITE_GITHUB_REPO: ${{ github.repository }} # Report a bug opens issues here
+
+jobs:
+  preview:
+    name: deploy preview
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository && vars.AZURE_CLIENT_ID_PR != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build app
+        run: |
+          npm --prefix app ci
+          npm --prefix app run build
+          node scripts/finish-dist.mjs
+      - name: Azure sign-in (OIDC, id-fc-gh-pr)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: SWA deployment token from Key Vault
+        id: swa
+        env:
+          VAULT: ${{ vars.AZURE_KEY_VAULT }}
+        run: |
+          token=$(az keyvault secret show --vault-name "$VAULT" --name swa-deployment-token --query value -o tsv --only-show-errors)
+          echo "::add-mask::$token"
+          if [ -z "$token" ]; then echo "::error::swa-deployment-token is empty or missing in $VAULT"; exit 1; fi
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: app/dist
+          api_location: api
+          skip_app_build: true
+      - name: Azure sign-out
+        if: always()
+        run: az logout || true
+
+  close:
+    name: close preview
+    if: github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository && vars.AZURE_CLIENT_ID_PR != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure sign-in (OIDC, id-fc-gh-pr)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: SWA deployment token from Key Vault
+        id: swa
+        env:
+          VAULT: ${{ vars.AZURE_KEY_VAULT }}
+        run: |
+          token=$(az keyvault secret show --vault-name "$VAULT" --name swa-deployment-token --query value -o tsv --only-show-errors)
+          echo "::add-mask::$token"
+          if [ -z "$token" ]; then echo "::error::swa-deployment-token is empty or missing in $VAULT"; exit 1; fi
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: close
+          app_location: app/dist # required by the action, unused for close
+      - name: Azure sign-out
+        if: always()
+        run: az logout || true

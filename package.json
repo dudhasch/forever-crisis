@@ -1,0 +1,24 @@
+{
+  "name": "forever-crisis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Forever Crisis, an unofficial fan project: walk the world of FINAL FANTASY VII EVER CRISIS again, rebuilt from your own Steam install.",
+  "scripts": {
+    "build:app": "cd app && npm ci && npm run build && cd .. && node scripts/finish-dist.mjs",
+    "azurite": "azurite --silent --location .azurite --skipApiVersionCheck",
+    "swa": "swa start app/dist --api-location api --port 4280",
+    "test": "cd app && npm test && cd ../api && npm ci && npm test && cd .. && node --test tests/unit/*.test.mjs",
+    "build": "cd app && npm ci && npm run build && cd .. && node scripts/finish-dist.mjs",
+    "scan": "node scripts/scan.mjs",
+    "export:public": "node scripts/export-public.mjs",
+    "bicep": "az bicep build -f infra/main.bicep --stdout > /dev/null && az bicep build-params -f infra/main.bicepparam --stdout > /dev/null"
+  },
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.10",
+    "azure-functions-core-tools": "^4.16.0",
+    "azurite": "^3.37.0",
+    "playwright": "^1.64.1",
+    "yaml": "^2.9.1"
+  },
+  "license": "MIT"
+}

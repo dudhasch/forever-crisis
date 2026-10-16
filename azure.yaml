@@ -1,0 +1,13 @@
+# Azure Developer CLI: `azd provision` creates the resources from infra/main.bicep (+ main.bicepparam).
+# Deployments normally go through GitHub Actions (.github/workflows/deploy-swa.yml); `azd deploy` also works.
+name: forever-crisis
+infra:
+  provider: bicep
+  path: infra
+  module: main
+services:
+  web:
+    project: ./app
+    language: js
+    host: staticwebapp
+    dist: dist

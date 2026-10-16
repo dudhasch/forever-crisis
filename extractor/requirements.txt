@@ -1,0 +1,12 @@
+# Pinned: the reference hashes in data/recipe.json were produced with exactly these versions.
+UnityPy==1.25.3
+numpy==2.2.6
+pillow==12.3.0
+cryptography==50.0.1
+msgpack==1.2.2
+lz4==4.4.5
+WannaCRI==0.3.3
+pygltflib==1.16.5
+texture2ddecoder==1.0.6
+etcpak==0.9.15
+astc-encoder-py==0.1.12

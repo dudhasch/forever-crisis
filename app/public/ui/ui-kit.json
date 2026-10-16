@@ -1,0 +1,690 @@
+{
+ "frame": {
+  "guides": {
+   "bottom": 87,
+   "left": 80,
+   "right": 77,
+   "top": 48
+  },
+  "inner": {
+   "bottom": 90,
+   "left": 146,
+   "right": 80,
+   "top": 66
+  },
+  "rail": [
+   80,
+   146
+  ]
+ },
+ "glyphs": {
+  "cell": 96,
+  "cells": {
+   "dpad": [
+    0,
+    3
+   ],
+   "dpad-down": [
+    2,
+    3
+   ],
+   "dpad-left": [
+    3,
+    3
+   ],
+   "dpad-lr": [
+    6,
+    3
+   ],
+   "dpad-right": [
+    4,
+    3
+   ],
+   "dpad-ud": [
+    5,
+    3
+   ],
+   "dpad-up": [
+    1,
+    3
+   ],
+   "mouse": [
+    1,
+    4
+   ],
+   "mouse-left": [
+    2,
+    4
+   ],
+   "mouse-middle": [
+    4,
+    4
+   ],
+   "mouse-move": [
+    6,
+    4
+   ],
+   "mouse-right": [
+    3,
+    4
+   ],
+   "mouse-wheel": [
+    5,
+    4
+   ],
+   "ps-circle": [
+    1,
+    0
+   ],
+   "ps-cross": [
+    0,
+    0
+   ],
+   "ps-l1": [
+    4,
+    0
+   ],
+   "ps-l2": [
+    6,
+    0
+   ],
+   "ps-l3": [
+    0,
+    1
+   ],
+   "ps-options": [
+    2,
+    1
+   ],
+   "ps-r1": [
+    5,
+    0
+   ],
+   "ps-r2": [
+    7,
+    0
+   ],
+   "ps-r3": [
+    1,
+    1
+   ],
+   "ps-square": [
+    2,
+    0
+   ],
+   "ps-touchpad": [
+    3,
+    1
+   ],
+   "ps-triangle": [
+    3,
+    0
+   ],
+   "stick-l": [
+    7,
+    3
+   ],
+   "stick-r": [
+    0,
+    4
+   ],
+   "xb-a": [
+    4,
+    1
+   ],
+   "xb-b": [
+    5,
+    1
+   ],
+   "xb-lb": [
+    0,
+    2
+   ],
+   "xb-ls": [
+    4,
+    2
+   ],
+   "xb-lt": [
+    2,
+    2
+   ],
+   "xb-menu": [
+    6,
+    2
+   ],
+   "xb-rb": [
+    1,
+    2
+   ],
+   "xb-rs": [
+    5,
+    2
+   ],
+   "xb-rt": [
+    3,
+    2
+   ],
+   "xb-view": [
+    7,
+    2
+   ],
+   "xb-x": [
+    6,
+    1
+   ],
+   "xb-y": [
+    7,
+    1
+   ]
+  },
+  "cols": 8,
+  "file": "glyphs.png",
+  "rows": 5
+ },
+ "hud": {
+  "arrow": {
+   "css": 48,
+   "file": "minimap-arrow.png",
+   "h": 96,
+   "w": 96
+  },
+  "minimap": {
+   "base": "minimap-base.png",
+   "css": 300,
+   "disc_radius_css": 128,
+   "h": 600,
+   "ring": "minimap-ring.png",
+   "w": 600
+  }
+ },
+ "icons": {
+  "cell": 96,
+  "cells": {
+   "accessory": [
+    7,
+    2
+   ],
+   "attack": [
+    2,
+    0
+   ],
+   "bangle": [
+    6,
+    2
+   ],
+   "check": [
+    3,
+    4
+   ],
+   "chevron-down": [
+    2,
+    5
+   ],
+   "chevron-left": [
+    0,
+    5
+   ],
+   "chevron-right": [
+    9,
+    4
+   ],
+   "chevron-up": [
+    1,
+    5
+   ],
+   "clock": [
+    1,
+    3
+   ],
+   "defeated": [
+    8,
+    3
+   ],
+   "defense": [
+    4,
+    0
+   ],
+   "diamond": [
+    5,
+    5
+   ],
+   "ether": [
+    5,
+    3
+   ],
+   "exp": [
+    9,
+    3
+   ],
+   "gil": [
+    0,
+    3
+   ],
+   "gloves": [
+    5,
+    1
+   ],
+   "gun-arm": [
+    6,
+    1
+   ],
+   "handgun": [
+    2,
+    2
+   ],
+   "headdress": [
+    0,
+    2
+   ],
+   "heal": [
+    2,
+    1
+   ],
+   "hp": [
+    0,
+    0
+   ],
+   "info": [
+    1,
+    4
+   ],
+   "item": [
+    7,
+    3
+   ],
+   "katana": [
+    4,
+    1
+   ],
+   "key": [
+    2,
+    3
+   ],
+   "key-item": [
+    3,
+    3
+   ],
+   "leader": [
+    6,
+    4
+   ],
+   "lock": [
+    4,
+    4
+   ],
+   "luck": [
+    0,
+    1
+   ],
+   "magic": [
+    7,
+    0
+   ],
+   "magic-attack": [
+    3,
+    0
+   ],
+   "magic-defense": [
+    5,
+    0
+   ],
+   "materia": [
+    9,
+    2
+   ],
+   "materia-up": [
+    0,
+    4
+   ],
+   "megaphone": [
+    1,
+    2
+   ],
+   "memoria": [
+    8,
+    2
+   ],
+   "minus": [
+    4,
+    5
+   ],
+   "mp": [
+    1,
+    0
+   ],
+   "outfit": [
+    5,
+    2
+   ],
+   "phoenix-down": [
+    6,
+    3
+   ],
+   "plus": [
+    3,
+    5
+   ],
+   "potion": [
+    4,
+    3
+   ],
+   "rifle": [
+    3,
+    2
+   ],
+   "save": [
+    7,
+    4
+   ],
+   "search": [
+    8,
+    4
+   ],
+   "shuriken": [
+    8,
+    1
+   ],
+   "spear": [
+    9,
+    1
+   ],
+   "speed": [
+    1,
+    1
+   ],
+   "spirit": [
+    9,
+    0
+   ],
+   "staff": [
+    7,
+    1
+   ],
+   "star": [
+    5,
+    4
+   ],
+   "strength": [
+    6,
+    0
+   ],
+   "sword": [
+    3,
+    1
+   ],
+   "vitality": [
+    8,
+    0
+   ],
+   "warning": [
+    2,
+    4
+   ],
+   "weapon": [
+    4,
+    2
+   ]
+  },
+  "cols": 10,
+  "file": "icons.png",
+  "rows": 6
+ },
+ "materia": {
+  "cell": 128,
+  "cells": {
+   "blue": [
+    1,
+    0
+   ],
+   "green": [
+    0,
+    0
+   ],
+   "purple": [
+    4,
+    0
+   ],
+   "red": [
+    2,
+    0
+   ],
+   "yellow": [
+    3,
+    0
+   ]
+  },
+  "cols": 5,
+  "file": "materia.png",
+  "rows": 1
+ },
+ "nine": {
+  "banner-enemy": {
+   "border": [
+    6,
+    70,
+    6,
+    70
+   ],
+   "file": "banner-enemy.png",
+   "h": 80,
+   "note": "rm-banner",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    12,
+    140,
+    12,
+    140
+   ],
+   "w": 640
+  },
+  "banner-party": {
+   "border": [
+    6,
+    70,
+    6,
+    70
+   ],
+   "file": "banner-party.png",
+   "h": 80,
+   "note": "rm-banner",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    12,
+    140,
+    12,
+    140
+   ],
+   "w": 640
+  },
+  "dropdown": {
+   "border": [
+    26,
+    26,
+    26,
+    26
+   ],
+   "file": "dropdown.png",
+   "h": 192,
+   "note": "rm-dropdown",
+   "outset": 10,
+   "scale": 2,
+   "slice": [
+    52,
+    52,
+    52,
+    52
+   ],
+   "w": 192
+  },
+  "frame": {
+   "border": [
+    80,
+    104,
+    112,
+    168
+   ],
+   "file": "frame.png",
+   "h": 720,
+   "note": "rm-frame: full-screen menu frame; content box = left 146..right 80, top 66..bottom 90 CSS px (at 1920x1080 the 9-slice is 1:1)",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    160,
+    208,
+    224,
+    336
+   ],
+   "w": 1040
+  },
+  "hover": {
+   "border": [
+    4,
+    12,
+    4,
+    12
+   ],
+   "file": "hover.png",
+   "h": 64,
+   "note": "rm-row highlight",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    8,
+    24,
+    8,
+    24
+   ],
+   "w": 480
+  },
+  "keycap": {
+   "border": [
+    14,
+    14,
+    14,
+    14
+   ],
+   "file": "keycap.png",
+   "h": 96,
+   "note": "rm-key: CSS puts the key text on it",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    28,
+    28,
+    28,
+    28
+   ],
+   "w": 96
+  },
+  "notify": {
+   "border": [
+    2,
+    60,
+    2,
+    32
+   ],
+   "file": "notify.png",
+   "h": 64,
+   "note": "rm-notify: icon sits in the left 30 CSS px",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    4,
+    120,
+    4,
+    64
+   ],
+   "w": 640
+  },
+  "panel": {
+   "border": [
+    24,
+    24,
+    24,
+    24
+   ],
+   "file": "panel.png",
+   "h": 192,
+   "note": "rm-panel: border-image panel",
+   "outset": 10,
+   "scale": 2,
+   "slice": [
+    48,
+    48,
+    48,
+    48
+   ],
+   "w": 192
+  },
+  "panel-plain": {
+   "border": [
+    24,
+    24,
+    24,
+    24
+   ],
+   "file": "panel-plain.png",
+   "h": 192,
+   "note": "rm-panel: border-image panel-plain",
+   "outset": 10,
+   "scale": 2,
+   "slice": [
+    48,
+    48,
+    48,
+    48
+   ],
+   "w": 192
+  },
+  "row": {
+   "border": [
+    2,
+    12,
+    2,
+    12
+   ],
+   "file": "row.png",
+   "h": 64,
+   "note": "rm-row base band",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    4,
+    24,
+    4,
+    24
+   ],
+   "w": 480
+  },
+  "select": {
+   "border": [
+    4,
+    12,
+    4,
+    12
+   ],
+   "file": "select.png",
+   "h": 64,
+   "note": "rm-row highlight",
+   "outset": 0,
+   "scale": 2,
+   "slice": [
+    8,
+    24,
+    8,
+    24
+   ],
+   "w": 480
+  }
+ },
+ "strips": {
+  "divider": {
+   "css_h": 2,
+   "file": "divider.png",
+   "h": 4,
+   "w": 1024
+  }
+ }
+}

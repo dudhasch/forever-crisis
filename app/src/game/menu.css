@@ -1,0 +1,222 @@
+/* Title screen and the FF7 (1997) style in-game menu: blue gradient windows like the battle HUD. */
+.ff-win {
+  background: linear-gradient(180deg, #2f3fa8 0%, #1b2475 55%, #0b0f3a 100%);
+  border: 2px solid #dfe3f0;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px #5a5f80,
+    0 3px 10px rgba(0, 0, 0, 0.55);
+}
+.ff {
+  font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  color: #f4f6ff;
+  text-shadow:
+    1px 1px 0 #000,
+    0 0 2px #000;
+}
+.ff .dim {
+  color: #aab4ff;
+}
+.ff .gold {
+  color: #ffe36a;
+}
+.ff .warn {
+  color: #ff9a8a;
+}
+.ff-label {
+  font-size: 12px;
+  color: #aab4ff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.ff-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 10px 3px 26px;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.ff-opt:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.ff-opt.cursor::before {
+  content: '☛';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: 18px;
+}
+.ff-opt.disabled {
+  color: #7d82a0;
+  cursor: default;
+}
+.ff-opt.active {
+  background: rgba(255, 255, 255, 0.14);
+}
+.ff-opt .grow {
+  flex: 1;
+  min-width: 0;
+}
+.ff-opt .right {
+  color: #cdd3ff;
+  font-variant-numeric: tabular-nums;
+}
+.ff-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: none;
+  image-rendering: auto;
+}
+.ff-icon.big {
+  width: 48px;
+  height: 48px;
+}
+.ff-icon.none {
+  display: inline-grid;
+  place-items: center;
+  font-size: 18px;
+}
+.ff-btn {
+  display: inline-block;
+  padding: 4px 14px;
+  margin: 2px 4px 2px 0;
+  border: 1px solid #dfe3f0;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font: inherit;
+  text-shadow: inherit;
+  cursor: pointer;
+}
+.ff-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.ff-btn:disabled {
+  color: #7d82a0;
+  border-color: #7d82a0;
+  cursor: default;
+}
+.ff input[type='search'] {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #8890b8;
+  background: #0b0f3a;
+  color: #fff;
+  font: inherit;
+}
+.ff-bar {
+  display: block;
+  height: 5px;
+  margin-top: 2px;
+  background: #11143a;
+  border: 1px solid #8890b8;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ff-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3e8cff, #a6e4ff);
+}
+.ff-bar.mp i {
+  background: linear-gradient(90deg, #3cb371, #b9ffb0);
+}
+
+/* ------------------------------------------------------------------ title (backdrop, logo, start menu: screens.css) */
+.title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  background: #02040c;
+}
+.title-screen.hidden {
+  display: none;
+}
+.title-press {
+  margin-top: 30px;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.title-panel {
+  width: min(720px, 100%);
+  max-height: min(70vh, 640px);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+}
+.title-panel h2 {
+  margin: 0 0 8px 6px;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: #aab4ff;
+  text-transform: uppercase;
+  font-weight: normal;
+}
+.title-main {
+  width: min(360px, 100%);
+  font-size: 20px;
+}
+.title-list {
+  overflow: auto;
+  min-height: 0;
+}
+.title-save {
+  font-size: 13px;
+  color: #cdd3ff;
+  line-height: 1.35;
+}
+.title-logos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  overflow: auto;
+  padding: 4px;
+}
+.title-logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid rgba(223, 227, 240, 0.4);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.title-logo img {
+  max-width: 100%;
+  max-height: 86px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px #000);
+}
+.title-logo.cursor,
+.title-logo:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.title-logo.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.title-logo .note {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 11px;
+  color: #ffd0a0;
+}
+.title-foot {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #aab4ff;
+  text-align: right;
+}
+

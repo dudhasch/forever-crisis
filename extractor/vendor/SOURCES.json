@@ -1,0 +1,23 @@
+{
+ "unity_gltf.py": {
+  "sha256": "8df18760274714691225518f0e557c851124084fbdbcb953accc49183a0ff4fd"
+ },
+ "convert_anims.py": {
+  "sha256": "b0a5327504a2041a5893cafcc1146c966ef44c67aabe603415124c1a1de09b19"
+ },
+ "build_weapons.py": {
+  "sha256": "9db1b532cc323a0320ae03da8167ce3d6924757c34109d19aa14f1a7fbd90b54"
+ },
+ "extract_skyboxes.py": {
+  "sha256": "74bcd6585e35b71e27e7b83b3b87d43299c19e222c6ae8543e6f4a1c97f2340f"
+ },
+ "extract_dungeon_maps.py": {
+  "sha256": "912e052021a0dd741dbdfcefb4a942a221e3e47a32c1ea4747ab7567d506c2c1"
+ },
+ "convert_effects.py": {
+  "sha256": "d7c3007b205b68f4d1cdcd25f9d7baa3920c3ac1ad25b6b4fab803bcb82fa4de"
+ },
+ "extract_lighting.py": {
+  "sha256": "8a24b02676f45884b7bcc45ba18736a8db64663957244dc1e69fd88eac93cf5c"
+ }
+}
