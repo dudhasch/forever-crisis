@@ -161,7 +161,7 @@ const ITEMS: ItemDef[] = [
 const START_ITEMS: Record<string, number> = { potion: 15, hipotion: 3, phoenix: 5, ether: 6, turboether: 1, elixir: 2, firecocktail: 2, blizzardcocktail: 2, thundercocktail: 2 };
 const ITEMS_KEY = 'ff7ec.battleItems';
 /** Shortcuts without a save game (the battle viewer): per character id. */
-const SHORTCUTS_KEY = 'ff7ec.battleShortcuts';
+const SHORTCUTS_KEY = 'ff7ec.battleShortcuts'; // gitleaks:allow (a localStorage key)
 export const SHORTCUT_SLOTS = 4;
 /** Guard: damage taken until the character's next turn (Remake's guard cuts most of a hit). */
 const GUARD_TAKEN = 0.5;

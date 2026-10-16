@@ -8,8 +8,8 @@
 | Storage account (Standard_LRS) `stfcprd…` | Table Storage: `saves` (cloud saves), `telemetry` (opt-in stats) |
 | Storage account (Standard_LRS) `stfcdata…` | public `ffcx-data` container for the extractor data packs |
 | Key Vault (RBAC) `kv-fc-prd-…` | secret `swa-deployment-token` (written by the deployment) |
-| Identity `id-fc-gh-main` | GitHub Actions on `main` (federated: `repo:<githubRepo>:ref:refs/heads/main`) |
-| Identity `id-fc-gh-pr` | GitHub Actions on pull requests (federated: `repo:<githubRepo>:pull_request`) |
+| Identity `id-fc-gh-main` | GitHub Actions on `main` (federated: `repo:<oidc repo>:ref:refs/heads/main`) |
+| Identity `id-fc-gh-pr` | GitHub Actions on pull requests (federated: `repo:<oidc repo>:pull_request`) |
 | App settings | `STORAGE_CONNECTION`, `TELEMETRY_ENABLED`, `TELEMETRY_RETENTION_DAYS` |
 | Custom domain (optional) | `customDomain` parameter; add the CNAME to the default hostname first |
 
@@ -26,7 +26,11 @@ Roles (least privilege; infrastructure changes are deployed by hand, not by CI):
 
 The identities are created only when `githubRepo` is set. Parameters are in `main.bicepparam` (environment
 variables `FFC_WORKLOAD`, `FFC_ENV`, `AZURE_LOCATION`, `FFC_REPOSITORY_URL`, `FFC_CUSTOM_DOMAIN`,
-`FFC_GITHUB_REPO`, `FFC_ADMIN_PRINCIPAL_ID`, with defaults).
+`FFC_GITHUB_REPO`, `FFC_GITHUB_OIDC_REPO`, `FFC_ADMIN_PRINCIPAL_ID`, with defaults).
+
+`<oidc repo>` is `githubRepo` unless the repository uses GitHub's immutable OIDC subjects (new repositories do):
+then the token's subject is `repo:owner@<owner id>/name@<repo id>:…` and `githubOidcRepo` must be that prefix
+without `repo:`. Read it with `gh api repos/<owner>/<name>/actions/oidc/customization/sub` (`sub_claim_prefix`).
 
 ## Check locally (nothing is deployed)
 
@@ -42,6 +46,7 @@ az bicep build-params -f infra/main.bicepparam --stdout > /dev/null
 New-AzResourceGroup -Name rg-fc-web-prd-weu-001 -Location westeurope -Tag @{ app = 'forever-crisis' }
 az bicep build -f infra/main.bicep --outfile main.json   # Az PowerShell needs bicep on PATH otherwise
 $p = @{ githubRepo = 'dudhasch/forever-crisis'; repositoryUrl = 'https://github.com/dudhasch/forever-crisis'
+        githubOidcRepo = 'dudhasch@155721920/forever-crisis@1422091107'
         adminPrincipalId = (Get-AzADUser -SignedIn).Id }
 New-AzResourceGroupDeployment -ResourceGroupName rg-fc-web-prd-weu-001 -TemplateFile main.json -TemplateParameterObject $p
 ```
@@ -50,7 +55,7 @@ New-AzResourceGroupDeployment -ResourceGroupName rg-fc-web-prd-weu-001 -Template
 
 ```bash
 az group create -n rg-fc-web-prd-weu-001 -l westeurope
-FFC_GITHUB_REPO=dudhasch/forever-crisis az deployment group create -g rg-fc-web-prd-weu-001 -f infra/main.bicep -p infra/main.bicepparam
+FFC_GITHUB_REPO=dudhasch/forever-crisis FFC_GITHUB_OIDC_REPO=dudhasch@155721920/forever-crisis@1422091107 az deployment group create -g rg-fc-web-prd-weu-001 -f infra/main.bicep -p infra/main.bicepparam
 ```
 
 ## GitHub settings from the outputs
@@ -75,7 +80,7 @@ az deployment group show -g rg-fc-web-prd-weu-001 -n main --query properties.out
 The federated credentials pin the OIDC subject, so:
 
 - `id-fc-gh-main` works only for runs on `refs/heads/main` (not tags, other branches or jobs with an
-  `environment:`, which change the subject to `repo:<repo>:environment:<name>`).
+  `environment:`, which change the subject to `repo:<oidc repo>:environment:<name>`).
 - `id-fc-gh-pr` works only for `pull_request` runs. Pull requests from forks get no OIDC token, so
   `preview-swa.yml` skips them (`head.repo.full_name == github.repository`).
 

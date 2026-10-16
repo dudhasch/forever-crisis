@@ -36,6 +36,9 @@ param telemetryRetentionDays int = 180
 @description('GitHub repository (owner/name) the CI identities trust: pushes to main and pull requests. Empty = no identities.')
 param githubRepo string = ''
 
+@description('Repository part of the OIDC subject. Empty = githubRepo. Repositories with immutable GitHub subjects (gh api repos/<repo>/actions/oidc/customization/sub shows "use_immutable_subject": true) need the sub_claim_prefix without "repo:", e.g. owner@123/name@456.')
+param githubOidcRepo string = ''
+
 @description('Object id of a user or group that may manage the Key Vault secrets (Key Vault Secrets Officer). Empty = none.')
 param adminPrincipalId string = ''
 
@@ -161,12 +164,13 @@ resource tokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 // ---- GitHub Actions identities (federated credentials) and their roles
 
 var deployIdentities = !empty(githubRepo)
+var oidcRepo = empty(githubOidcRepo) ? githubRepo : githubOidcRepo
 var githubIssuer = 'https://token.actions.githubusercontent.com'
 var roles = {
   contributor: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   reader: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
-  kvSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
-  kvSecretsOfficer: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+  kvSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6' // gitleaks:allow (built-in role id)
+  kvSecretsOfficer: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7' // gitleaks:allow (built-in role id)
   blobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
 
@@ -181,7 +185,7 @@ resource idMainFed 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedId
   name: 'github-main'
   properties: {
     issuer: githubIssuer
-    subject: 'repo:${githubRepo}:ref:refs/heads/main'
+    subject: 'repo:${oidcRepo}:ref:refs/heads/main'
     audiences: ['api://AzureADTokenExchange']
   }
 }
@@ -197,7 +201,7 @@ resource idPrFed 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIden
   name: 'github-pr'
   properties: {
     issuer: githubIssuer
-    subject: 'repo:${githubRepo}:pull_request'
+    subject: 'repo:${oidcRepo}:pull_request'
     audiences: ['api://AzureADTokenExchange']
   }
 }

@@ -6,6 +6,7 @@ param location = readEnvironmentVariable('AZURE_LOCATION', 'westeurope')
 param repositoryUrl = readEnvironmentVariable('FFC_REPOSITORY_URL', '')
 param customDomain = readEnvironmentVariable('FFC_CUSTOM_DOMAIN', '')
 param githubRepo = readEnvironmentVariable('FFC_GITHUB_REPO', '')
+param githubOidcRepo = readEnvironmentVariable('FFC_GITHUB_OIDC_REPO', '')
 param adminPrincipalId = readEnvironmentVariable('FFC_ADMIN_PRINCIPAL_ID', '')
 param telemetryEnabled = true
 param telemetryRetentionDays = 180
