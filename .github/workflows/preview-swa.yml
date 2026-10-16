@@ -37,7 +37,7 @@ jobs:
           npm --prefix app run build
           node scripts/finish-dist.mjs
       - name: Azure sign-in (OIDC, id-fc-gh-pr)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Azure sign-in (OIDC, id-fc-gh-pr)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
