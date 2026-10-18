@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' # id-fc-gh-main trusts main only
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download the pack
         env:
           PACK_URL: ${{ inputs.pack_url }}
