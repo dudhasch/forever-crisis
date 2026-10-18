@@ -32,7 +32,7 @@ jobs:
           case "$PACK_URL" in https://*) ;; *) echo "::error::pack_url must be an https link"; exit 1 ;; esac
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/pack.zip" "$PACK_URL"
       - name: Azure sign-in (OIDC, id-fc-gh-main)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
