@@ -7,7 +7,7 @@
     "build:app": "cd app && npm ci && npm run build && cd .. && node scripts/finish-dist.mjs",
     "azurite": "azurite --silent --location .azurite --skipApiVersionCheck",
     "swa": "swa start app/dist --api-location api --port 4280",
-    "test": "cd app && npm test && cd ../api && npm ci && npm test && cd .. && node --test tests/unit/*.test.mjs",
+    "test": "cd app && npm test && cd ../api && npm test && cd .. && node --test tests/unit/*.test.mjs",
     "build": "cd app && npm ci && npm run build && cd .. && node scripts/finish-dist.mjs",
     "scan": "node scripts/scan.mjs",
     "export:public": "node scripts/export-public.mjs",
@@ -15,10 +15,15 @@
   },
   "devDependencies": {
     "@azure/static-web-apps-cli": "^2.0.10",
-    "azure-functions-core-tools": "^4.16.0",
     "azurite": "^3.37.0",
     "playwright": "^1.64.1",
     "yaml": "^2.9.1"
+  },
+  "overrides": {
+    "adm-zip": "^0.6.1",
+    "selfsigned": "^5.5.0",
+    "tmp": "^0.2.7",
+    "uuid": "^11.1.1"
   },
   "license": "MIT"
 }

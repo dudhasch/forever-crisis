@@ -229,7 +229,7 @@ irm $env:FFC_BASE/install.ps1 | iex                                             
 Site + functions with the emulators:
 
 ```powershell
-npm install                       # SWA CLI, Functions Core Tools, Azurite (dev dependencies)
+npm install                       # SWA CLI, Azurite (dev dependencies)
 npm run azurite                   # Table Storage emulator
 copy api\local.settings.sample.json api\local.settings.json
 npm run build:app; npm run swa    # http://localhost:4280 (sign-in is simulated by the SWA CLI)
