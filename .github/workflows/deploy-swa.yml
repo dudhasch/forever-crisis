@@ -29,8 +29,8 @@ jobs:
     # a dispatch from another branch would not get past the federated credential
     if: github.ref == 'refs/heads/main' && vars.AZURE_CLIENT_ID != ''
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22 }
       - name: Build app
         run: |
@@ -38,7 +38,7 @@ jobs:
           npm --prefix app run build
           node scripts/finish-dist.mjs
       - name: Azure sign-in (OIDC, id-fc-gh-main)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
