@@ -236,6 +236,72 @@ function Write-Sixel([int]$x, [int]$y, $image) {
     if ($m.Success) { [Console]::SetCursorPosition($x, $y); [Console]::Write($m.Value) }
 }
 
+function Get-SixelFrames($image, [int]$count = 24) {
+    $frames = New-Object System.Collections.Generic.List[string]
+    for ($i = 0; $i -lt $count; $i++) {
+        $ansi = ConvertTo-Ansi $image 400
+        $m = [regex]::Match($ansi, "(?s)${E}P.*?${E}\\")
+        if ($m.Success) { [void]$frames.Add($m.Value) }
+    }
+    return @($frames)
+}
+
+$script:ActiveAnimation = $null
+
+function Start-MateriaAnimation($items, [int]$intervalMs = 45) {
+    if (-not ($Live -and $Sixel) -or $Unattended) { return }
+    Stop-MateriaAnimation
+    if (-not $items -or -not $items.Count) { return }
+
+    $sync = [hashtable]::Synchronized(@{ Stop = $false })
+    $rs = [runspacefactory]::CreateRunspace()
+    $rs.Open()
+    $ps = [powershell]::Create()
+    $ps.Runspace = $rs
+    [void]$ps.AddScript({
+        param($sync, $animItems, [int]$interval)
+        $f = 0
+        while (-not $sync.Stop) {
+            try {
+                $curX = [Console]::CursorLeft
+                $curY = [Console]::CursorTop
+                foreach ($it in $animItems) {
+                    if ($it.frames.Count -gt 0) {
+                        [Console]::SetCursorPosition($it.x, $it.y)
+                        [Console]::Write($it.frames[$f % $it.frames.Count])
+                    }
+                }
+                [Console]::SetCursorPosition($curX, $curY)
+            } catch { }
+            $f++
+            Start-Sleep -Milliseconds $interval
+        }
+    }).AddArgument($sync).AddArgument($items).AddArgument($intervalMs)
+
+    $handle = $ps.BeginInvoke()
+    $script:ActiveAnimation = @{
+        Sync = $sync
+        PowerShell = $ps
+        Runspace = $rs
+        Handle = $handle
+    }
+}
+
+function Stop-MateriaAnimation {
+    if ($script:ActiveAnimation) {
+        try {
+            $script:ActiveAnimation.Sync.Stop = $true
+            if ($script:ActiveAnimation.Handle) {
+                [void]$script:ActiveAnimation.Handle.AsyncWaitHandle.WaitOne(500)
+            }
+            $script:ActiveAnimation.PowerShell.Dispose()
+            $script:ActiveAnimation.Runspace.Dispose()
+        } catch { }
+        $script:ActiveAnimation = $null
+    }
+}
+
+
 function Hex([int[]]$c) { '#{0:x2}{1:x2}{2:x2}' -f $c[0], $c[1], $c[2] }
 function Blend([int[]]$a, [int[]]$b, [double]$t) { @(0, 1, 2 | ForEach-Object { [int]($a[$_] + ($b[$_] - $a[$_]) * $t) }) }
 
@@ -264,8 +330,10 @@ function Get-TitleArt([string]$text) {
     return M ($out -join "`n")
 }
 
+function Clear-Screen { try { Clear-Host } catch { } }
+
 function Show-Header([int]$n, [switch]$NoClear, [switch]$NoRecap) {
-    if (-not $NoClear) { Clear-Host }
+    if (-not $NoClear) { Stop-MateriaAnimation; Clear-Screen }
     $chips = for ($i = 0; $i -lt $Steps.Count; $i++) {
         if ($i -lt $n - 1) { "[$Mako]$($Ch.check) $($Steps[$i])[/]" }
         elseif ($i -eq $n - 1) { "[black on $Accent] $($i + 1) $($Steps[$i]) [/]" }
@@ -288,6 +356,7 @@ function Confirm([string]$question, [bool]$default = $true) {
     return Read-SpectreConfirm -Message $question -DefaultAnswer $(if ($default) { 'y' } else { 'n' }) -Color $Accent
 }
 function Fail([string]$message) {
+    Stop-MateriaAnimation
     Log "FAIL $message"
     Write-Host ''
     $text = M ("[white]$(Esc $message)[/]`n`n[$Dim]Details are in[/] [grey]$(Esc $LogFile)[/]")
@@ -305,21 +374,24 @@ function Get-Bar([double]$f, [int]$w, [string]$color) {
     "[$color]$($Ch.bar * $n)[/][grey19]$($Ch.bar * ($w - $n))[/]"
 }
 
-# Opening screen: the title next to a spinning materia (a moment of animation where Sixel is available).
+# Opening screen: the title next to a spinning materia (animated infinitely where Sixel is available).
 function Show-Banner {
-    Clear-Host
+    Clear-Screen
     $sub = M ("[$Dim]A fan-made explorer for[/] [white]FINAL FANTASY VII EVER CRISIS[/][$Dim]. It walks you through the game's world,[/]`n" +
         "[$Dim]story and battles, built from the files of[/] [white]your own[/] [$Dim]Steam copy.[/]")
     $title = if ((Width) -ge 80) { Get-TitleArt 'Forever Crisis' } else { M "[bold $Accent]FF7 FOREVER CRISIS[/]" }
     $text = Format-SpectreRows -Data @($title, $sub)
     $orb = Materia 'green' 14 -Animate:$Live
     if (-not $orb -or (Width) -lt 100) { Show $text; Write-Host ''; return }
+    if (-not ($Live -and $Sixel)) { Show (Format-SpectreColumns -Data @($orb, $text)); return }
     $y = [Console]::CursorTop
     Show (Format-SpectreColumns -Data @($orb, $text))
-    if (-not ($Live -and $Sixel)) { return }
     $end = [Console]::CursorTop
-    for ($i = 0; $i -lt 24; $i++) { Write-Sixel 0 $y $orb; Start-Sleep -Milliseconds 45 }  # one turn of the materia
     [Console]::SetCursorPosition(0, $end)
+    $frames = Get-SixelFrames $orb 24
+    if ($frames.Count) {
+        Start-MateriaAnimation @(@{ x = 0; y = $y; frames = $frames }) 45
+    }
 }
 
 function Install-Tools($release) {
@@ -379,19 +451,69 @@ function Get-Art([string]$game) {
     Enable-VT
 }
 
+$StoryNames = [ordered]@{
+    'logo-01' = 'FINAL FANTASY VII'
+    'logo-02' = 'CRISIS CORE FINAL FANTASY VII'
+    'logo-03' = 'FINAL FANTASY VII THE FIRST SOLDIER'
+    'logo-04' = 'FINAL FANTASY VII THE FIRST SOLDIER EPISODE II'
+    'logo-05' = 'FINAL FANTASY VII ADVENT CHILDREN EC EDITION'
+    'logo-06' = 'DIRGE of CERBERUS FINAL FANTASY VII EC EDITION'
+    'logo-07' = 'BEFORE CRISIS FINAL FANTASY VII EC EDITION'
+}
+
+function Select-Stories([string[]]$stories) {
+    if ($Unattended -or -not $Live -or $stories.Count -le 1) { return $stories }
+    Write-Host ''
+    $p = [Spectre.Console.MultiSelectionPrompt[string]]::new()
+    $p.Title = '[bold]Which stories would you like to extract/install?[/]'
+    $p.PageSize = [Math]::Max(5, $stories.Count)
+    $p.WrapAround = $true
+    $p.Required = $true
+    $p.HighlightStyle = [Spectre.Console.Style]::new([Spectre.Console.Color]::FromHex($Accent))
+    $p.InstructionsText = "[$Dim](Press [white]space[/] to toggle, [white]enter[/] to confirm)[/]"
+    foreach ($s in $stories) {
+        $node = $p.AddChoice($s)
+        $node.Select()
+    }
+    Enable-VT
+    $selected = [Spectre.Console.AnsiConsole]::Prompt($p)
+    return @($selected)
+}
+
 function Show-Found([string]$game) {
     $Recap.Add("[$Mako]$($Ch.check)[/] Game: [white]$(Esc $game)[/]")
     Say "[$Mako]$($Ch.check)[/] Found the game in [white]$(Esc $game)[/]"
     Get-Art $game
     $logos = Get-GameArt 'logo'
-    if (-not $logos.Count -or -not $Sixel) { return }  # logos are lettering: unreadable as blocks
-    $w = [Math]::Max(16, [Math]::Min(26, [int](((Width) - 8) / 4) - 2))
-    $cells = foreach ($p in $logos) { Img $p $w }
-    $cells = @($cells | Where-Object { $_ })
-    if (-not $cells.Count) { return }
-    Write-Host ''
-    $gallery = Format-SpectreColumns -Data $cells
-    Show (Format-SpectrePanel -Data $gallery -Header "[$Accent] The stories in your copy of the game [/]" -Border Rounded -Color Grey30 -Expand)
+    if ($logos.Count -and $Sixel) {
+        $w = [Math]::Max(16, [Math]::Min(26, [int](((Width) - 8) / 4) - 2))
+        $cells = foreach ($p in $logos) { Img $p $w }
+        $cells = @($cells | Where-Object { $_ })
+        if ($cells.Count) {
+            Write-Host ''
+            $gallery = Format-SpectreColumns -Data $cells
+            Show (Format-SpectrePanel -Data $gallery -Header "[$Accent] The stories in your copy of the game [/]" -Border Rounded -Color Grey30 -Expand)
+        }
+    }
+    $foundStories = @()
+    foreach ($p in $logos) {
+        $key = [IO.Path]::GetFileNameWithoutExtension($p)
+        if ($StoryNames.Contains($key)) {
+            $foundStories += $StoryNames[$key]
+        } else {
+            $foundStories += $key
+        }
+    }
+    if ($foundStories.Count -gt 1) {
+        $script:SelectedStories = Select-Stories $foundStories
+        $Recap.Add("[$Mako]$($Ch.check)[/] Stories: [white]$(($script:SelectedStories) -join ', ')[/]")
+        Say "[$Mako]$($Ch.check)[/] Selected [white]$($script:SelectedStories.Count)[/] of [white]$($foundStories.Count)[/] stories"
+    } elseif ($foundStories.Count -eq 1) {
+        $script:SelectedStories = $foundStories
+        $Recap.Add("[$Mako]$($Ch.check)[/] Story: [white]$($foundStories[0])[/]")
+    } else {
+        $script:SelectedStories = @()
+    }
 }
 
 function Find-Game {
@@ -445,6 +567,78 @@ function Select-Folder {
         return $null
     } catch {
         return Read-SpectreText -Message 'Paste the game folder path' -AllowEmpty
+    }
+}
+
+function Select-InstallFolder {
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $d = New-Object System.Windows.Forms.FolderBrowserDialog
+        $d.Description = 'Select the folder to install FF7 Forever Crisis into'
+        $d.UseDescriptionForTitle = $true
+        if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { return $d.SelectedPath }
+        return $null
+    } catch {
+        return Read-SpectreText -Message 'Paste the install folder path' -AllowEmpty
+    }
+}
+
+function Request-InstallDir {
+    while ($true) {
+        $c = Ask 'Where would you like to install the game?' @('Enter path', 'Browse for folder...', 'Cancel')
+        if ($c -eq 'Cancel') { return $null }
+        $path = $null
+        if ($c -eq 'Browse for folder...') {
+            $path = Select-InstallFolder
+        } else {
+            $entered = Read-SpectreText -Message 'Enter install folder path' -DefaultAnswer $script:InstallDir
+            if (-not [string]::IsNullOrWhiteSpace($entered)) {
+                $path = $entered.Trim()
+            }
+        }
+        if (-not $path) { continue }
+        try {
+            $fullPath = [System.IO.Path]::GetFullPath($path.Trim('"', "'", ' '))
+            return $fullPath
+        } catch {
+            Say "[yellow]Invalid path:[/] $(Esc $_.Exception.Message)"
+        }
+    }
+}
+
+function Set-InstallDir([string]$newPath) {
+    $oldInstallDir = $script:InstallDir
+    $oldRuntime = $script:Runtime
+    $oldLogDir = $script:LogDir
+
+    $script:InstallDir = $newPath
+    $script:Runtime = Join-Path $script:InstallDir 'runtime'
+    $script:LogDir = Join-Path $script:InstallDir 'logs'
+    $script:Tools = Join-Path $script:InstallDir 'tools'
+    $script:Ffcx = Join-Path $script:Tools 'ffcx\ffcx.exe'
+    $script:State = Join-Path $script:InstallDir 'install.json'
+    $script:GameArt = Join-Path $script:InstallDir '.ffcx\art'
+
+    New-Item -ItemType Directory -Force -Path $script:InstallDir, $script:Runtime, $script:LogDir | Out-Null
+
+    if ($oldRuntime -ne $script:Runtime -and (Test-Path $oldRuntime)) {
+        Copy-Item -Path (Join-Path $oldRuntime '*') -Destination $script:Runtime -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if ($oldLogDir -ne $script:LogDir -and (Test-Path $oldLogDir)) {
+        Copy-Item -Path (Join-Path $oldLogDir '*') -Destination $script:LogDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    $newModules = Join-Path $script:Runtime 'modules'
+    if (Test-Path $newModules) {
+        $env:PSModulePath = $newModules + [IO.Path]::PathSeparator + $env:PSModulePath
+        $script:ArtDir = Join-Path $newModules 'ffc-art'
+    }
+    $script:LogFile = Join-Path $script:LogDir ('install-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
+    Log "install dir changed from $oldInstallDir to $script:InstallDir"
+
+    if ($oldInstallDir -ne $script:InstallDir -and (Test-Path $oldInstallDir)) {
+        Remove-Item -LiteralPath (Join-Path $oldInstallDir 'runtime') -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath (Join-Path $oldInstallDir 'logs') -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $oldInstallDir -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -669,6 +863,8 @@ function New-Shortcut([string]$path, [string]$target, [string]$arguments, [strin
 function Install-Local($release, [string]$game, [bool]$localMode) {
     Show-Header 3
     $pwshExe = (Get-Process -Id $PID).Path
+    $newPwsh = Join-Path $Runtime 'pwsh\pwsh.exe'
+    if (Test-Path $newPwsh) { $pwshExe = $newPwsh }
     $menu = Join-Path ([Environment]::GetFolderPath('Programs')) $AppName
     New-Item -ItemType Directory -Force $menu | Out-Null
     $icon = Join-Path $game 'FF7EC.exe'
@@ -708,7 +904,7 @@ function Install-Local($release, [string]$game, [bool]$localMode) {
     foreach ($k in $props.Keys) { New-ItemProperty -Path $key -Name $k -Value $props[$k] -Force | Out-Null }
     $origins = @()
     if ($release.site) { $origins += ([Uri]$release.site).GetLeftPart([UriPartial]::Authority) }
-    @{ version = $release.version; game = $game; localMode = $localMode; installed = (Get-Date).ToString('o'); allowedOrigins = $origins; port = $Port } |
+    @{ version = $release.version; game = $game; localMode = $localMode; installed = (Get-Date).ToString('o'); allowedOrigins = $origins; port = $Port; stories = $script:SelectedStories } |
         ConvertTo-Json | Set-Content -LiteralPath $State -Encoding UTF8
     Say "[$Mako]$($Ch.check)[/] Added to [white]Apps & features[/] and the Start menu ([white]$AppName[/])"
     $Recap.Add("[$Mako]$($Ch.check)[/] Shortcuts, Start menu and Apps & features")
@@ -727,10 +923,11 @@ function Show-Done($release, $extract, [bool]$localMode) {
             $end = [Console]::CursorTop
             $y = $end - $rows  # the window may have scrolled
             $x0 = [int](((Width) - (5 * 8 + 4 * 2)) / 2)
-            for ($f = 0; $f -lt 24; $f++) {
-                for ($i = 0; $i -lt 5; $i++) { Write-Sixel ($x0 + $i * 10) $y $orbs[$i] }
-                Start-Sleep -Milliseconds 40
+            $items = for ($i = 0; $i -lt 5; $i++) {
+                $frames = Get-SixelFrames $orbs[$i] 24
+                @{ x = ($x0 + $i * 10); y = $y; frames = $frames }
             }
+            Start-MateriaAnimation $items 40
             [Console]::SetCursorPosition(0, $end)
         } else { Show (Format-SpectreAligned -Data (Format-SpectreColumns -Data $orbs) -HorizontalAlignment Center) }
     }
@@ -744,6 +941,11 @@ function Show-Done($release, $extract, [bool]$localMode) {
     if ($localMode) {
         $lines += "[bold white]Play on this PC[/]"
         $lines += "Double-click [white]$AppName[/] on your desktop. Any browser, no internet needed."
+        $lines += ''
+    }
+    if ($script:SelectedStories -and $script:SelectedStories.Count) {
+        $lines += "[bold white]Stories[/]"
+        $lines += ($script:SelectedStories | ForEach-Object { "[$Accent]$($Ch.mid)[/] [white]$(Esc $_)[/]" }) -join "`n"
         $lines += ''
     }
     $lines += "[$Dim]Run the installer again anytime to update, repair or uninstall.`nLog: $(Esc $LogFile)[/]"
@@ -763,10 +965,15 @@ function Show-Done($release, $extract, [bool]$localMode) {
     if ($localMode -and -not $Unattended -and (Confirm 'Start the explorer now?' $true)) {
         Start-Process -FilePath (Join-Path $Tools 'ffcx\ffcx-server.exe') -ArgumentList @('serve', '--root', $InstallDir, '--port', $Port, '--open')
     }
+    if (-not $Unattended) {
+        Read-SpectrePause -Message "[$Dim]Press any key to close[/]" -AnyKey | Out-Null
+    }
+    Stop-MateriaAnimation
 }
 
 function Remove-All {
-    Clear-Host
+    Stop-MateriaAnimation
+    Clear-Screen
     $orb = Materia 'purple' 5
     $title = M "[bold $Accent]FF7 FOREVER CRISIS[/]  [$Dim]uninstall[/]"
     if ($orb) { Show (Format-SpectreColumns -Data @($orb, $title)) } else { Show $title; Write-Host '' }
@@ -844,7 +1051,11 @@ try {
         $mode = if ($c -like 'Update*') { 'update' } else { 'repair' }
     } else {
         Show-Welcome
-        if (-not (Confirm "Install to [white]$(Esc $InstallDir)[/]?" $true)) { exit 0 }
+        while (-not (Confirm "Install to [white]$(Esc $script:InstallDir)[/]?" $true)) {
+            $newPath = Request-InstallDir
+            if (-not $newPath) { exit 0 }
+            Set-InstallDir $newPath
+        }
     }
     Install-Tools $release
     Install-Data $release
@@ -863,6 +1074,9 @@ try {
     Log 'installer finished'
     exit 0
 } catch {
+    Stop-MateriaAnimation
     Log ("error: " + $_.Exception.ToString() + "`n" + $_.ScriptStackTrace)
     Fail $_.Exception.Message
+} finally {
+    Stop-MateriaAnimation
 }

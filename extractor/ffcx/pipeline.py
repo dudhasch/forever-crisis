@@ -99,6 +99,7 @@ class Run:
         return set(p.read_text(encoding='utf-8').split('\n')) - {''} if p.exists() else set()
 
     def mark_done(self, pid: str, key: str):
+        (self.meta / 'done').mkdir(parents=True, exist_ok=True)
         with open(self.meta / 'done' / f'{pid}.txt', 'a', encoding='utf-8') as f:
             f.write(key + '\n')
 

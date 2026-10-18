@@ -21,6 +21,8 @@ Thanks for helping keep FF7 Forever Crisis playable!
 | `installer/`, `extractor/` | the `irm \| iex` installer and the Python extractor (`ffcx`) |
 | `scripts/`, `tests/` | build helpers, end-to-end tests |
 
+For deep-dive architecture, extraction pipeline internals, and release build workflows, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 ## Develop
 
 ```bash
