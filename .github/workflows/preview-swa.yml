@@ -28,8 +28,8 @@ jobs:
     if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository && vars.AZURE_CLIENT_ID_PR != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22 }
       - name: Build app
         run: |
@@ -37,7 +37,7 @@ jobs:
           npm --prefix app run build
           node scripts/finish-dist.mjs
       - name: Azure sign-in (OIDC, id-fc-gh-pr)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Azure sign-in (OIDC, id-fc-gh-pr)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID_PR }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
