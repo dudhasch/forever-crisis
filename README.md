@@ -1,3 +1,11 @@
+> [!TIP]
+> **Quick Install**  
+> Open **PowerShell** and run:
+> ```powershell
+> irm https://github.com/dudhasch/forever-crisis/releases/latest/download/install.ps1 | iex
+> ```
+> *Requires Windows 10 or 11 (64-bit) and FINAL FANTASY VII EVER CRISIS installed on Steam.*
+
 # FF7 Forever Crisis
 
 Walk the world of **FINAL FANTASY VII EVER CRISIS** again — explore the cities, Mako reactors, and slums, relive iconic story cutscenes, and command ATB battles, rebuilt directly in your web browser.
