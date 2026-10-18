@@ -5,6 +5,20 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-18
+
+### Added
+- Installer enhancements:
+  - Custom install directory selection with folder browser dialog and text prompt fallback.
+  - Sixel animated materia visuals with smooth frame transitions.
+  - Story selection prompt for players during installation.
+  - Resumable extraction pipeline improvements and early artwork extraction.
+  - Copy-paste quick install callout on the README.
+
+### Changed
+- Refactored installer functions for cleaner modular organization and graceful exit handling.
+- Upgraded Python and Node dependency versions across CI and packages.
+
 ## [0.1.0] - 2026-10-16
 
 ### Added
@@ -30,5 +44,6 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Running the installer again redoes only what a new release changed, and retries a model that ran out of
   memory on its own.
 
-[Unreleased]: https://github.com/dudhasch/forever-crisis/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/dudhasch/forever-crisis/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/dudhasch/forever-crisis/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/dudhasch/forever-crisis/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 {
   "name": "forever-crisis-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Forever Crisis, an unofficial fan project: the site's Azure Functions (version feed, compatibility check, cloud saves, opt-in telemetry).",
   "type": "module",

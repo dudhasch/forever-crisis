@@ -1,7 +1,7 @@
 {
   "name": "ff7-forever-crisis",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Forever Crisis, an unofficial fan project: walk the world of FINAL FANTASY VII EVER CRISIS again, rebuilt from your own Steam install.",
   "scripts": {
