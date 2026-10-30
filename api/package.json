@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.2",
-    "@azure/functions": "^4.16.5"
+    "@azure/functions": "^4.17.0"
   },
   "engines": {
     "node": ">=20"
