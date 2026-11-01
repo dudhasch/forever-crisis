@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: ./scripts/stage-release.ps1 -Out release-out -Site "${{ vars.SITE_URL }}" -DataBase "${{ vars.DATA_BASE_URL }}" -VerifyData
       - name: GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: release-out/*
