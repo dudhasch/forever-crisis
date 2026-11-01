@@ -3,7 +3,7 @@ UnityPy==1.25.4
 numpy==2.5.4
 pillow==12.3.0
 cryptography==50.0.2
-msgpack==1.2.3
+msgpack==1.2.4
 lz4==4.4.5
 WannaCRI==0.3.3
 pygltflib==1.16.5
