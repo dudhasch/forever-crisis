@@ -61,7 +61,7 @@ jobs:
           npm ci --ignore-scripts
           npx playwright install --with-deps chromium
           node tests/e2e/headers-csp.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: app-dist, path: app/dist }
 
   api:
