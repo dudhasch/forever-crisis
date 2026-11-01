@@ -14,7 +14,7 @@
     "bicep": "az bicep build -f infra/main.bicep --stdout > /dev/null && az bicep build-params -f infra/main.bicepparam --stdout > /dev/null"
   },
   "devDependencies": {
-    "@azure/static-web-apps-cli": "^2.0.10",
+    "@azure/static-web-apps-cli": "^2.1.0",
     "azurite": "^3.37.0",
     "playwright": "^1.64.1",
     "yaml": "^2.9.1"
