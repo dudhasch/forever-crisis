@@ -13,13 +13,13 @@
   },
   "dependencies": {
     "fengari": "^0.1.5",
-    "three": "^0.186.1",
-    "three-mesh-bvh": "^0.9.16"
+    "three": "^0.187.0",
+    "three-mesh-bvh": "^0.9.18"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
-    "@types/three": "^0.186.0",
+    "@types/node": "^26.6.6",
+    "@types/three": "^0.187.0",
     "typescript": "~7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   }
 }
